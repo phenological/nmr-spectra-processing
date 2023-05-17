@@ -16,10 +16,10 @@
 #' @importFrom stats ccf median
 alignSeries <- function(Y, ref="median", shifts=FALSE, ...){
   #QC input Y
-  if(!is.matrix(Y))
-  cat(crayon::red("alignSeries >>",
-                  "Y must be a matrix\n"))
-  stop()
+  if(!is.matrix(Y)){
+    cat(crayon::red("alignSeries >>","Y must be a matrix\n"))
+    stop()
+  }
   #Parse ref and build reference spectrum
   if (is.function(ref)){
     ref <- ref(Y)
@@ -71,12 +71,12 @@ alignSeries <- function(Y, ref="median", shifts=FALSE, ...){
 #' @param x numeric, spectra scale e.g. ppm
 #' @param Y matrix, intensities, spectra in rows
 #' @param matrix character, optional. The sample matrix; either 'urine', 'plasma' or
-#' 'other'. Either `matrix` or `RoRef` must be specified.
-#' @param RoRef numeric or logical, optional. Specification of the Region of
+#' 'other'. Either `matrix` or `rOref` must be specified.
+#' @param rOref numeric or logical, optional. Specification of the Region of
 #' Reference corresponding to the reference signal for calibration. It may be
 #' specified as a vector of x coordinates, as a length 2 vector declaring the
-#' limits of the region, or as logical filter for x. Either `RoRef` or `matrix`
-#' must be provided. If `RoRef` is not provided, the standard reference peak
+#' limits of the region, or as logical filter for x. Either `rOref` or `matrix`
+#' must be provided. If `rOref` is not provided, the standard reference peak
 #' for the given `matrix` will be used as Region of Reference.
 #' @param ... additional arguments for `alignSeries` (see details)
 #' @details crops the Region of Reference of the spectra matrix and passes it
@@ -85,46 +85,32 @@ alignSeries <- function(Y, ref="median", shifts=FALSE, ...){
 #' corresponding amounts.
 #' @returns calibrated spectra matrix
 #' @importFrom stats ccf
-calibrateSpectra <- function(x, Y, RoRef, matrix, ...){
-  RoRefs <- list("urine"=c(0.938,0.945),
+calibrateSpectra <- function(x, Y, rOref, matrix, ...){
+  rOrefs <- list("urine"=c(0.938,0.945),
                  "plasma"=c(),
                  "other"=c(-0.05,0.05))
-  #Parse RoRef and construct RoRef filter
-  if (missing(RoRef)){
+  #Parse rOref and construct rOref filter
+  if (missing(rOref)){
     if (missing(matrix)) {
       cat(crayon::red("alignSeries >>",
-                      "Provide 'RoRef' or 'matrix' argument"))
+                      "Provide 'rOref' or 'matrix' argument\n"))
       stop()
     }
 
-    RoRef <- RoRefs[[matrix]]
-    RoRef <- x >= RoRef[1] & x <= RoRef[2]
+    rOref <- rOrefs[[matrix]]
+    rOref <- x >= rOref[1] & x <= rOref[2]
   }
   else{
-    if (is.numeric(RoRef)){
-      if (length(RoRef==2)){
-        RoRef <- x >= RoRef[1] & x <= RoRef[2]
-      }
-      else{
-        RoRef <- x %in% RoRef
-      }
-    }
-    else{
-      if (is.logical(RoRef)){
-        if (length(x) != length(RoRef))
-          cat(crayon::red("alignSeries >>",
-                          "RoRef filter does not match x"))
-        stop()
-      }
+    if(!is.logical(rOref)){
+      if (is.numeric(rOref)) rOref <- x >= rOref[1] & x <= rOref[2]
       else{
         cat(crayon::red("alignSeries >>",
-                        "Invalid roRef: must be logical, numeric or 'matrix'"))
-        stop()
+                        "Invalid rOref: must be logical, numeric or 'matrix'\n"))
       }
     }
   }
-  #Align on RoRef and get shifts
-  shifts <- alignSeries(Y[,RoRef], shifts=TRUE, ... )
+  #Align on rOref and get shifts
+  shifts <- alignSeries(Y[,rOref], shifts=TRUE, ... )
   #Shift whole spectra by the corresponding shifts
   t(sapply(1:dim(Y)[1],function(i){
     shift <- shifts[i]
