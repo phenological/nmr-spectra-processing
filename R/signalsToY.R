@@ -1,6 +1,5 @@
 #' Interpolates fitted signals on the given set of points and combines them to 
 #' generate the overall intensity
-#' @export
 #' 
 #' @param x numeric, points to interpolate
 #' @param signals data.frame with columns x, y, width, shape[kind,fwhm], ... 
@@ -8,6 +7,7 @@
 #' Run about.signal() for details.
 #' @param frequency numeric, the frequency in Hz of the NMR experiment
 #' @returns a numeric vector of intensities computed on x
+#' @export
 signalsToY <- function(x,signals,frequency=400){
   res <- 0
   #trick to make sure signals is a data.frame even if signalsToY received a list

@@ -1,122 +1,92 @@
-#' Aligns series to a reference
-#' Computes the shift that maximizes each series' cross-correlation to the
-#' @param Y matrix, series in rows
-#' @param ref character, numeric or function. Specifies the reference for
-#' alignment. May be a series of the same length as the input series, the index
-#' of the row of Y to be used as reference, a function to compute the
-#' reference from the input, or a character representing an implemented
-#' reference. Valid character references are 'median' (default: reference is
-#' the median of the input) and 'mean'. If ref is a function, it run on Y
-#' and the result is used as reference.
-#' @param shifts logical. If TRUE, returns the shifts; if FALSE, returns the
-#' shifted series. Default: FALSE
-#' @param ... additional parameters
-#' @returns either a numeric vector of shifts or a matrix with the shifted
-#' series in its rows
-#' @importFrom stats ccf median
-alignSeries <- function(Y, ref="median", shifts=FALSE, ...){
-  #QC input Y
-  if(!is.matrix(Y)){
-    cat(crayon::red("alignSeries >>","Y must be a matrix\n"))
+#' Spectra calibration
+#' Calibrates spectra
+#' @param x numeric, spectra scale e.g. ppm
+#' @param Y matrix, intensities, spectra in rows
+#' @param ref character, reference signal for calibration. Supported references: 'glucose', 'alanine', 'tsp'
+#' @param rOref numeric, optional. Limits of the Region of
+#' Reference withing which the reference signal for calibration will be aligned.
+#' Defaults: 5.15 - 5.3 for glucose, 1.4 - 1.56 for alanine, and -0.2 - 0.2 for tsp.
+#' @param cshift numeric, chemical shift where the reference signal should be in the output
+#' Defaults to the center of the rOref
+#' @param j numeric. For doublet references, the coupling constant of the doublet
+#' Defaults: .0065 for glucose and .0125 for alanine
+#' @param threshold numeric, minimum cross-correlation requiered for alignment
+#' see alignSeries
+#' @param ... additional arguments for alignSeries (see details)
+#' @details crops the Region of Reference of the spectra matrix and passes it
+#' to alignSeries, along with a model of the reference signal, to calculate the
+#' shifts that align the spectra on the rOref to the ref signal.
+#' Then, it shifts the full spectra by the corresponding amounts.
+#' @returns calibrated spectra matrix
+#' @importFrom stats ccf
+calibrateSpectra <- function(x, Y, ref, rOref, cshift, j, maxShift=1/3, threshold=0.2, ...){
+  #standards for refs
+  rOrefs <- list(glucose=c(5.15,5.3)
+                 ,alanine=c(1.4,1.56)
+                 ,tsp=c(-0.2,0.2)
+                 )
+  js <- list(glucose=0.0065,alanine=0.0125)
+  
+  #qc ref
+  if (missing(ref)){
+    cat(crayon::red("calibrateSpectra >>","ref must be"
+                    ,"either 'glucose','alanine' or 'tsp'"))
     stop()
   }
-  #Parse ref and build reference spectrum
-  if (is.function(ref)){
-    ref <- ref(Y)
-  }
   else{
-    if (is.character(ref)){
-      if (ref=="median") ref <- apply(Y,2,median)
-      else if (ref=="mean") ref <- apply(Y,2,mean)
-      #TBD?: "centroid" of the set of spectra
-      else {
-        cat(crayon::red("alignSeries >>",
-                        "Invalid character ref: must be 'median; (default) or 'mean'\n"))
+    if (!(ref %in% c("alanine","glucose","tsp"))){
+      cat(crayon::red("calibrateSpectra >>","ref must be"
+                      ,"either 'glucose','alanine' or 'tsp'"))
+      stop()
+    }
+  }
+  
+  #qc or get rOref
+  if (missing(rOref)) rOref <- rOrefs[[ref]]
+  else{
+    if(!(is.numeric(rOref) & length(rOref==2))){
+      cat(crayon::red("alignSeries >>",
+                      "Invalid value for optional argument 'rOref':"
+                      ,"must be a chem. shift. interval\n"
+                      ))
         stop()
       }
     }
-    else{
-      #TBD: numeric reference may be interpreted as index or as a reference series
-      if (is.numeric(ref)){
-        if (length(ref) == 1) if (ref <= dim(Y)[1]) ref <- Y[ref,]
-      }
-      else{
-        if (length(ref) != dim(Y)[2]) {
-          cat(crayon::red("alignSeries >>",
-                          "Invalid ref: reference spectrum does not match the length of input spectra\n"))
-          stop()
-        }
-      }
-    }
-  }
-  if (length(ref) != dim(Y)[2]) {
-    cat(crayon::red("alignSeries >>",
-                    "Invalid ref: filter length does not match the length of input spectra\n"))
-    stop()
-  }
 
-  t(apply(Y,1,function(y){
-    cc <- ccf(y, ref, type="correlation", plot = FALSE, ...)
-    ccmax <- which.max(cc$acf)
-    shift <- as.vector(cc$lag)[ccmax]
-    if (shifts) return(shift)
-    trail_l <- if (shift <= 0) 0 else shift
-    trail_r <- if (shift <= 0) -shift else 0
-    c(rep(0, trail_r), y[(trail_l+1):(length(y)-trail_r)], rep(0,trail_l))
-  }))
-}
-
-#' Spectra calibration
-#' Calibrates spectra by aligning a reference signal
-#' @param x numeric, spectra scale e.g. ppm
-#' @param Y matrix, intensities, spectra in rows
-#' @param matrix character, optional. The sample matrix; either 'urine', 'plasma' or
-#' 'other'. Either `matrix` or `rOref` must be specified.
-#' @param rOref numeric or logical, optional. Specification of the Region of
-#' Reference corresponding to the reference signal for calibration. It may be
-#' specified as a vector of x coordinates, as a length 2 vector declaring the
-#' limits of the region, or as logical filter for x. Either `rOref` or `matrix`
-#' must be provided. If `rOref` is not provided, the standard reference peak
-#' for the given `matrix` will be used as Region of Reference.
-#' @param ... additional arguments for `alignSeries` (see details)
-#' @details crops the Region of Reference of the spectra matrix and passes it
-#' to `alignSeries`, which calculates the shifts that align the spectra on the
-#' Region of Reference. Then, it shifts the full spectra by the
-#' corresponding amounts.
-#' @returns calibrated spectra matrix
-#' @importFrom stats ccf
-calibrateSpectra <- function(x, Y, rOref, matrix, ...){
-  rOrefs <- list("urine"=c(0.938,0.945),
-                 "plasma"=c(),
-                 "other"=c(-0.05,0.05))
-  #Parse rOref and construct rOref filter
-  if (missing(rOref)){
-    if (missing(matrix)) {
-      cat(crayon::red("alignSeries >>",
-                      "Provide 'rOref' or 'matrix' argument\n"))
-      stop()
-    }
-
-    rOref <- rOrefs[[matrix]]
-    rOref <- x >= rOref[1] & x <= rOref[2]
-  }
+  #qc or compute cshift
+  if (missing(cshift)) cshift <- mean(rOref)
   else{
-    if(!is.logical(rOref)){
-      if (is.numeric(rOref)) rOref <- x >= rOref[1] & x <= rOref[2]
-      else{
-        cat(crayon::red("alignSeries >>",
-                        "Invalid rOref: must be logical, numeric or 'matrix'\n"))
-      }
+    if (!is.numeric(cshift) | (cshift < min(x[rOref])) | (cshift > max(x[rOref]))){
+      cat(crayon::red("calibrateSpectra >>", "Invalid cshift value"))
     }
   }
-  #Align on rOref and get shifts
-  shifts <- alignSeries(Y[,rOref], shifts=TRUE, ... )
+  
+  #qc j
+  if (missing(j)) j <- js[[ref]]
+  else{
+    if (!is.numeric(j)){
+      cat(crayon::red("calibrateSpectra >>", "Invalid coupling constant j"))
+    }
+  }
+  
+  #make rOref filter
+  rOref <- x >= rOref[1] & x <= rOref[2]
+  
+  #generate model reference peak
+  #TBC: is it ok to always model with a lorentzian?
+  if (ref=="tps") means <- cshift
+  else means <- c(cshift - j/2, cshift + j/2)
+  ref <- rowSums(lorentzian(x[rOref],mean=means
+                   ,fwhm=0.001))
+  
+  #Align normalized spectra on rOref to reference and get shifts
+  normS <- t(apply(Y[,rOref],1,function(y) y / max(y)))
+  shifts <- alignSeries(normS, ref, shift=FALSE, lag.max=length(ref) * maxShift, threshold, ... )
+  
   #Shift whole spectra by the corresponding shifts
   t(sapply(1:dim(Y)[1],function(i){
     shift <- shifts[i]
     y <- Y[i,]
-    trail_l <- if (shift <= 0) 0 else shift
-    trail_r <- if (shift <= 0) -shift else 0
-    c(rep(0, trail_r), y[(trail_l+1):(length(y)-trail_r)], rep(0,trail_l))
+    shiftSeries(y,shift)
   }))
 }

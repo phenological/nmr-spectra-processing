@@ -1,15 +1,20 @@
 #' @importFrom gsignal hilbert
-referenceDeconvolution <- function(x,y,rOref,frequency=400,...){
+#' @export
+referenceDeconvolution <- function(x,y,rOref,frequency=400
+                                   ,signals=list(list()),zero=.001,...){
   #inverse fourier transform with normalization
   ifft <- function(x){
   fft(x, inverse = TRUE) / length(x)
 }
   #qc input lengths
   if(length(x)!=length(y)){
-    cat(crayon::red("referenceDeconvolution >>", "lengths of x and y don't match"))
+    cat(crayon::red("referenceDeconvolution >>", "lengths of x and y don't match\n"))
     stop()
   }
-  
+ 
+  #avoid zeros in y
+  #y[y==0] <- zero
+   
   #parse and construct rOref
   if (missing(rOref)) rOref = TRUE
   else{
@@ -17,7 +22,7 @@ referenceDeconvolution <- function(x,y,rOref,frequency=400,...){
       if (is.numeric(rOref) & length(rOref==2))
         rOref <- x >= rOref[1] & x <= rOref[2]
       else{
-        cat(crayon::red("referenceDeconvolution >>", "invalid rOref"))
+        cat(crayon::red("referenceDeconvolution >>", "invalid rOref\n"))
         stop()
       }
     }
@@ -38,7 +43,7 @@ referenceDeconvolution <- function(x,y,rOref,frequency=400,...){
     x <- x - shift
   }
   #fit model
-  refModel <- fitSignals(x,y,1,roi=rOref,frequency=frequency,...)
+  refModel <- fitSignals(x,y,signals=signals,roi=rOref,frequency=frequency,...)
   if (is.null(refModel)){
     cat(crayon::yellow("referenceDeconvolution>>"
                        ,"signal fitting with fitSignals in the rOref returned NULL\n"

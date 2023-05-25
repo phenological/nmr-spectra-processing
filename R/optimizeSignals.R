@@ -1,6 +1,5 @@
 #' Optimizes the fit of the given signals to the given series
 #' 
-#' @export
 #' Calls JS ml-nmr-processing.optimizeSignals from a JS environment built using the V8 package
 #' Warning: may crash if given negative ppm. Fix coming.
 #' @param x numeric vector, the indepedent variable (ppm)
@@ -21,6 +20,8 @@
 #' passed to the function, "fittedY" the total predicted intensity obtained
 #' by interpolating the fitted signals on "x" and adding them up, and 
 #' "integrals" the integrals of the fitted signals.
+#' @import V8
+#' @export
 optimizeSignals <- function(x,y,signals,v8Context=ct,path="nmrProcessing"
                             ,options=list(optimization=list(kind="lm")
                                           ,shape=list(kind="pseudoVoigt"
