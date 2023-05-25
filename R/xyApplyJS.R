@@ -6,7 +6,6 @@
 #'  Communication between R and JS is mediated by a V8 context, which means 
 #'  that parsing is done through jsonlite.
 #'  
-#' @export
 #' @param x A vector (probably numeric), any other object that parses to a 
 #' JS array through jsonlite::toJSON
 #' @param y A vector (probably numeric) or any other object that parses to a 
@@ -18,6 +17,8 @@
 #' @returns The output of the script, parsed through jsonlite::fromJSON.
 #' As a side effect, the variable xy will be (re)set on thev8Context
 #' @examples xyApplyJS(x=c(1,2,3),y=c(1,2,3),script="{x:xy.x*2,y:xy.y-3}")
+#' @import V8
+#' @export
 
 xyApplyJS <- function(x,y,script,v8Context=ct){
   v8Context$assign("xy",list(x=x,y=y))
