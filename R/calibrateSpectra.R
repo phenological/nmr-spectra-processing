@@ -3,23 +3,21 @@
 #' @param x numeric, spectra scale e.g. ppm
 #' @param Y matrix, intensities, spectra in rows
 #' @param ref character, semi-optional. Reference signal for calibration. Supported references: 'glucose', 'alanine', 'tsp'. One of ref and cshift must be provided.
-#' @param rOref numeric, optional. Limits of the Region of
-#' Reference withing which the reference signal for calibration will be aligned.
-#' Defaults: 5.15 - 5.3 for glucose, 1.4 - 1.56 for alanine, and -0.2 - 0.2 for tsp.
-#' @param cshift numeric, chemical shift where the reference signal should be in the output
-#' Defaults to the center of the rOref
-#' @param j numeric. For doublet references, the coupling constant of the doublet
-#' Defaults: .0065 for glucose and .0125 for alanine. 
-#' @param threshold numeric, minimum cross-correlation requiered for alignment
-#' see alignSeries
-#' @param ... additional arguments for alignSeries (see details)
-#' @details crops the Region of Reference of the spectra matrix and passes it
-#' to alignSeries, along with a model of the reference signal, to calculate the
-#' shifts that align the spectra on the rOref to the ref signal.
-#' Then, it shifts the full spectra by the corresponding amounts.
+#' @param rOref numeric, optional. Limits of the Region of Reference within which the reference signal for calibration will be aligned. Defaults: 5.15 - 5.3 for glucose, 1.4 - 1.56 for alanine, and -0.2 - 0.2 for tsp.
+#' @param cshift numeric, chemical shift where the reference signal should be in the output. Defaults to the center of the rOref
+#' @param j numeric. For doublet references, the coupling constant of the doublet. Defaults: .0065 for glucose and .0125 for alanine. 
+#' @param threshold numeric, minimum cross-correlation requiered for alignment. See alignSeries
+#' @param method character, the method to be used to fill the empty extremes of the shifted series (padding). See 'pad' for details. Default: "sampling".
+#' @param using numeric, the number of points from the extremes to be used for padding in the "sampling" method. See 'pad' for details. Default: 1/15th of the series' length.
+#' @param plot logical. Argument passed to ccf through alignSeries; if TRUE, each spectrum's correlation to the reference is plotted. Default: FALSE. You should not need to change the default unless you are getting misalignments and you want to check the cross-correlation to fine-tune the alignment parameters.
+#' @param ... additional arguments for alignSeries, see Details
+#' @details crops the Region of Reference of the spectra matrix and passes it to alignSeries, along with a model of the reference signal, to calculate the shifts that align the spectra on the rOref to the ref signal. Then, it shifts the full spectra by the corresponding amounts.
 #' @returns calibrated spectra matrix
 #' @importFrom stats ccf
-calibrateSpectra <- function(x, Y, ref, rOref, cshift, j, maxShift=1/3, threshold=0.2, ...){
+calibrateSpectra <- function(x, Y, ref, rOref, cshift, j
+                             , maxShift=1/3, threshold=0.2
+                             , method="sampling", using=length(x)/15, plot=FALSE
+                             ,...){
   #standards for refs
   rOrefs <- list(glucose=c(5.15,5.3)
                  ,alanine=c(1.4,1.56)
@@ -95,12 +93,14 @@ calibrateSpectra <- function(x, Y, ref, rOref, cshift, j, maxShift=1/3, threshol
   
   #Align normalized spectra on rOref to reference and get shifts
   normS <- t(apply(Y[,rOref],1,function(y) y / max(y)))
-  shifts <- alignSeries(normS, ref, shift=FALSE, lag.max=length(ref) * maxShift, threshold, ... )
+  shifts <- alignSeries(normS, ref, shift=FALSE
+                        , lag.max=length(ref) * maxShift, threshold=threshold
+                        , plot=plot, ...)
   
   #Shift whole spectra by the corresponding shifts
   t(sapply(1:dim(Y)[1],function(i){
     shift <- shifts[i]
     y <- Y[i,]
-    shiftSeries(y,shift)
+    shiftSeries(y,shift, method=method, using=using)
   }))
 }
