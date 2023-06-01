@@ -9,6 +9,7 @@
 #' @param ..., additional options to be passed to matplot
 #' @returns NULL
 #' @export
+#Candidate to utilities.R
 smatplot <- function(x, Y, by, limits, type="l",...){
   if (!missing(limits)){
     fi <- x >= limits[1] & x <= limits[2]

@@ -14,10 +14,14 @@
 #' @details crops the Region of Reference of the spectra matrix and passes it to alignSeries, along with a model of the reference signal, to calculate the shifts that align the spectra on the rOref to the ref signal. Then, it shifts the full spectra by the corresponding amounts.
 #' @returns calibrated spectra matrix
 #' @importFrom stats ccf
-calibrateSpectra <- function(x, Y, ref, rOref, cshift, j
-                             , maxShift=1/3, threshold=0.2
-                             , method="sampling", using=length(x)/15, plot=FALSE
-                             ,...){
+calibrateSpectra <- function(x, Y, ref, rOref, cshift, j, fwhm
+                             , maxShift=1/3, threshold=0.2, padding="sampling"
+                             , using=c(9.5,10), from=apply(Y,2,median)
+                             , plot=FALSE,...){
+  #parse using as chem. shift. Any other form will be left for pad to parse.
+  if (is.numeric(using) & length(using) == 2)
+    using <- crop(x,using)
+  
   #standards for refs
   rOrefs <- list(glucose=c(5.15,5.3)
                  ,alanine=c(1.4,1.56)
@@ -81,15 +85,26 @@ calibrateSpectra <- function(x, Y, ref, rOref, cshift, j
     }
   }
   
+  #qc fwhm
+  if (missing(fwhm)) fwhm=0.0017
+  else{
+    if (!is.numeric(fwhm) | length(fwhm)!=1){
+      cat(crayon::red("calibrateSpectra >>", "Invalid fwhm\n"))
+      stop()
+    }
+  }
+  
   #make rOref filter
   rOref <- x >= rOref[1] & x <= rOref[2]
   
   #generate model reference peak
   #If no j, model a singulet
+  #Warning: this is using a lorentzian? Good for now, but we should gravitate to
+  #pseudoVoigt once the problems with the optimization have been solved
   if (is.null(j)) means <- cshift
   else means <- c(cshift - j/2, cshift + j/2)
   ref <- rowSums(lorentzian(x[rOref],mean=means
-                   ,fwhm=0.001))
+                   ,fwhm=fwhm))
   
   #Align normalized spectra on rOref to reference and get shifts
   normS <- t(apply(Y[,rOref],1,function(y) y / max(y)))
@@ -101,6 +116,6 @@ calibrateSpectra <- function(x, Y, ref, rOref, cshift, j
   t(sapply(1:dim(Y)[1],function(i){
     shift <- shifts[i]
     y <- Y[i,]
-    shiftSeries(y,shift, method=method, using=using)
+    shiftSeries(y,shift, method=padding, using=using, from=from)
   }))
 }

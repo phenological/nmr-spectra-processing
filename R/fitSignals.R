@@ -14,13 +14,14 @@ fitSignals <- function(x,y,roi,signals,grouping,dropExcess=.75
                        ,rEnd=1
                        ,rStep=0.5
                        ,peakPickingOptions=list(shape=list(kind="pseudoVoigt"
-                                                           ,fwhm=0.5
-                                                           ,mu=0))
+                                                       #    ,fwhm=0.5
+                                                           ,mu=.7))
                        ,optimize=TRUE,optimization=optimizeSignals
                        ,optimizationOptions=list(optimization=list(kind="lm")
+                                                 ,linewidth=0.1
                                                  ,shape=list(kind="pseudoVoigt"
-                                                             ,fwhm=0.5
-                                                             ,mu=0))){
+                                                          #   ,fwhm=0.5
+                                                             ,mu=.7))){
   #Quality check on x y length
   if (length(x) != length(y)){
     cat(crayon::red("fitSignals>>","x and y length do not match\n"))
@@ -54,7 +55,6 @@ fitSignals <- function(x,y,roi,signals,grouping,dropExcess=.75
     peakPickingOptions$frequency=frequency
   
   #compute minimum expected number of peaks, if possible
-  #remember that this is 
   if (missing(grouping)){
     #no grouping, no signals or only 1 signal -> anything is ok
     if (missing(signals)) expectedPeaks <- 1
@@ -81,6 +81,12 @@ fitSignals <- function(x,y,roi,signals,grouping,dropExcess=.75
                                   ,threshold=3 ,rEnd=1 ,rStep=0.5
                                   ,options=peakPickingOptions)
   cp <- countPeaks(peaksPicked)
+  
+  ##No peaks picked --> return NULL
+  if (cp==0){
+    cat(crayon::yellow("fitSignals>>","Not enough peaks picked\n"))
+    return(NULL)
+  }
   
   ##Invalid attribute names in peaks picked --> return NULL
   if (sum(is.na(peaksPicked$x))>0 | sum(is.na(peaksPicked$y))>0) {

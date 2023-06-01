@@ -12,8 +12,8 @@
 #' @returns either a numeric vector of shifts or a matrix with the shifted series in its rows
 #' @export
 alignSeries <- function(Y, ref="median", threshold=0.6, shift=TRUE
-                        , method="zeroes", using=length(x)/15
-                        , plot = FALSE, ...){
+                        , method="zeroes", using=(dim(Y)[2]*14/15:dim(Y)[2])
+                        , from=apply(Y,2,median), plot = FALSE, ...){
   #QC input Y
   if(!is.matrix(Y)){
     cat(crayon::red("alignSeries >>","Y must be a matrix\n"))
@@ -56,11 +56,11 @@ alignSeries <- function(Y, ref="median", threshold=0.6, shift=TRUE
   #print(length(ref))
   #print(ref[1:10])
   t(apply(Y,1,function(y){
-    cc <- ccf(y, ref, type="correlation", plot, ...)
+    cc <- ccf(y, ref, type="correlation", plot=plot, ...)
     ccmax <- which.max(cc$acf)
     delta <- as.vector(cc$lag)[ccmax]
     if (cc$acf[ccmax] < threshold) delta = 0
-    if (shift) return(shiftSeries(y,-delta,method=method,using=using))
+    if (shift) return(shiftSeries(y,-delta,method=method,using=using,from=from))
     return(-delta)
   }))
 }

@@ -24,9 +24,11 @@
 #' @export
 optimizeSignals <- function(x,y,signals,v8Context=ct,path="nmrProcessing"
                             ,options=list(optimization=list(kind="lm")
+                                          #,linewidth=.1
                                           ,shape=list(kind="pseudoVoigt"
-                                                      ,fwhm=0.5
-                                                      ,mu=0))
+                                                      #,fwhm=.5
+                                                   #    ,mu=.7
+                                                 ))
                             ,frequency=400,integration="fwhm"){
   if (is.null(options$simulation)){
     options$simulation <- list()

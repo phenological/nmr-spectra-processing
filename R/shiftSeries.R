@@ -1,7 +1,7 @@
-shiftSeries <- function(x,shift,method="sampling",using=length(x)/15){
+shiftSeries <- function(x,shift,method="sampling",using=(length(x)*14/15):length(x),from=x){
   direction <- sign(shift)
   shift <- abs(shift)
-  padded <- pad(x,shift,-direction,method,using)
+  padded <- pad(x,shift,-direction,method,using,from)
   if (direction==1) return(padded[1:length(x)])
   return(padded[(shift+1):length(padded)])
   #trail_l <- if (shift <= 0) 0 else shift

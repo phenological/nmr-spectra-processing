@@ -17,8 +17,9 @@ autoPeaksPicking <- function(x,y,v8Context=ct,path="nmrProcessing"
                              ,threshold=3,rEnd=1,rStep=0.5
                              ,frequency=400
                              ,options=list(shape=list(kind="pseudoVoigt"
-                                                      ,fwhm=0.5
-                                                      ,mu=0))
+                                               #       ,fwhm=0.5
+                                               #       ,mu=.7
+                                               ))
                              ,incomplete=FALSE){
   if (is.null(options$frequency)) options$frequency <- frequency
   if (is.null(options$thresholdFactor)) options$thresholdFactor <- threshold

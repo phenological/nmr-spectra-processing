@@ -1,4 +1,5 @@
-pad <- function(x, n, side = 0, method="sampling",using=length(x)/15){
+pad <- function(x, n, side = 0, method="sampling"
+                ,using=(length(x)*14/15):length(x),from=x){
   N <- length(x)
   if (!side %in% c(-1,0,1)){
     cat(crayon::red("nmr-spectra-processing::pad >>"
@@ -14,11 +15,35 @@ pad <- function(x, n, side = 0, method="sampling",using=length(x)/15){
     ))
   }
   if (method == "sampling"){
+    #qc from
+    if (!is.numeric(from)){
+      cat(crayon::yellow("pad >>", "invalid argument value for 'from'",
+                         "switching to default 'x' for sampling"))
+      from <- x
+    }
+    #qc using
+    if (is.logical(using)){
+      if (length(using) != length(from)){
+        cat(crayon::yellow("pad >>", "invalid argument value for 'using'",
+                        "switching to default last 1/15 points for sampling"))
+        using <- as.integer((length(from)*14/15):length(from))
+      }
+    }
+    else{
+      if (is.numeric(using)){
+        using <- as.integer(using)
+      }
+      else{
+        cat(crayon::yellow("pad >>", "invalid argument value for 'using'",
+                           "switching to default c(9.5,10) for sampling"))
+        using <- as.integer((length(from)*14/15):length(from))
+      }
+    }
     return(switch(side+2
-                  ,c(sample(x[1:using],n,replace=TRUE), x)
-                  ,c(sample(x[1:using],n,replace=TRUE), x 
-                     , sample(x[N-using+(1:using)],n,replace=TRUE))
-                  ,c(x,sample(x[N-using+(1:using)],n,replace=TRUE))
+                  ,c(sample(from[using],n,replace=TRUE)/2, x)
+                  ,c(sample(from[using],n,replace=TRUE)/2, x 
+                     , sample(from[using],n,replace=TRUE)/2)
+                  ,c(x,sample(from[using],n,replace=TRUE)/2)
     ))
   }
   if (method == "circular"){
