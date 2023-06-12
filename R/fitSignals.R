@@ -18,7 +18,7 @@ fitSignals <- function(x,y,roi,signals,grouping,dropExcess=.75
                                                            ,mu=.7))
                        ,optimize=TRUE,optimization=optimizeSignals
                        ,optimizationOptions=list(optimization=list(kind="lm")
-                                                 ,linewidth=0.1
+                                                 #,linewidth=0.1
                                                  ,shape=list(kind="pseudoVoigt"
                                                           #   ,fwhm=0.5
                                                              ,mu=.7))){
@@ -78,7 +78,7 @@ fitSignals <- function(x,y,roi,signals,grouping,dropExcess=.75
                                   ,v8Context=v8Context,frequency=frequency
                                   ,path=path
                                   ,recursive=recursivePicking
-                                  ,threshold=3 ,rEnd=1 ,rStep=0.5
+                                  ,threshold=threshold ,rEnd=rEnd ,rStep=rStep
                                   ,options=peakPickingOptions)
   cp <- countPeaks(peaksPicked)
   

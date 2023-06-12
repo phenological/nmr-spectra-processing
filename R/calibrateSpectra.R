@@ -62,8 +62,9 @@ calibrateSpectra <- function(x, Y, ref, rOref, cshift, j, fwhm
   #qc or compute cshift
   if (missing(cshift)) cshift <- mean(rOref)
   else{
-    if (!is.numeric(cshift) | (cshift < min(x[rOref])) | (cshift > max(x[rOref]))){
+    if (!is.numeric(cshift) | (cshift < rOref[1]) | (cshift > rOref[2])){
       cat(crayon::red("calibrateSpectra >>", "Invalid cshift value\n"))
+      print(is(cshift))
       stop()
     }
   }
@@ -116,6 +117,6 @@ calibrateSpectra <- function(x, Y, ref, rOref, cshift, j, fwhm
   t(sapply(1:dim(Y)[1],function(i){
     shift <- shifts[i]
     y <- Y[i,]
-    shiftSeries(y,shift, method=padding, using=using, from=from)
+    shiftSeries(y,shift, padding=padding, using=using, from=from)
   }))
 }

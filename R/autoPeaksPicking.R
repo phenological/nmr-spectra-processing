@@ -36,18 +36,22 @@ autoPeaksPicking <- function(x,y,v8Context=ct,path="nmrProcessing"
         if (incomplete & cp > 0) return(pickedPeaks) 
         return(NULL)
       }
+      #cat(threshold,options$thresholdFactor)
       tf <- options$thresholdFactor - rStep
       options$thresholdFactor <- tf
-      return(autoPeaksPicking(x,y,v8Context,path
-                              ,minimum,recursive
-                              ,tf,rEnd,rStep, frequency
-                              ,options))
+      cat(tf,options$thresholdFactor,"\n")
+      print("recurring")
+      return(autoPeaksPicking(x,y,v8Context,path=path
+                              ,minimum=minimum,recursive=TRUE
+                              ,threshold=tf,rEnd=rEnd,rStep=rStep
+                              ,frequency=frequency,options=options
+                              )
+             )
     }
     else{
-      if (incomplete & cp > 0) return(pickedPeaks)
+      if (incomplete & (cp > 0)) return(pickedPeaks)
       return(NULL)
     } 
   }
   else return(pickedPeaks)
-  
 }

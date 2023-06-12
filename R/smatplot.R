@@ -8,19 +8,46 @@
 #' @param type, optional, defaults to "l" (lines), default strongly recommended
 #' @param ..., additional options to be passed to matplot
 #' @returns NULL
+#' @import RColorBrewer
 #' @export
 #Candidate to utilities.R
-smatplot <- function(x, Y, by, limits, type="l",...){
-  if (!missing(limits)){
-    fi <- x >= limits[1] & x <= limits[2]
+smatplot <- function(x, Y, by, roi, type="l"
+                     ,reverse=FALSE,legend,label,palette="Paired",...){
+  if (!missing(roi)){
+    fi <- x >= roi[1] & x <= roi[2]
     x <- x[fi]
     Y <- Y[,fi]
   }
+  if (reverse){
+    x <- rev(x)
+    Y <- t(apply(Y,1,rev))
+  }
+    
   if (missing(by)) matplot(x,t(Y),type=type,...)
   else{
+    colores <- brewer.pal(n=by,name=palette)
     n <- floor(dim(Y)[1] / by)
     r <- dim(Y)[1] %% by
-    for (j in 1:n) matplot(x,t(Y[1:by + by*(j-1),]),type=type,...)
-    if (r>0) matplot(x,t(Y[(by*n+1):(by*n+r),]),type=type,...)
+    for (j in 1:n){
+      soi <- 1:by + by*(j-1)
+      matplot(x,t(Y[soi,]),type=type,col=colores[1:by],...)
+      if (!missing(legend)){
+        if (missing(label))
+          legend(legend,legend=soi,text.col=colores[1:by])
+        else
+          legend(legend,legend=label[soi]
+                 ,text.col=colores)
+      }
+    } 
+    if (r>0){
+      soi <- (by*n+1):(by*n+r)
+      matplot(x,t(Y[soi,]),type=type,col=colores[1:by],...)
+      if (!missing(legend)){
+        if (missing(label))
+          legend(legend,legend=soi,text.col=colores[1:by])
+        else
+          legend(legend,legend=label[soi],text.col=colores[1:by])
+      }
+    } 
   }
 }

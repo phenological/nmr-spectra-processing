@@ -13,8 +13,9 @@ crop <- function(x,roi){
 #For that reason the current threshold is expected to give problems, specially
 #since it was calculated for 600 Hz but the default frequency of the function
 #is 400 Hz...
-referenceDeconvolution <- function(x,y,rOref=c(-0.02,0.02),signals,frequency=400
-                                   ,padding="sampling",using=c(9.5,10),from=y
+referenceDeconvolution <- function(x,y,rOref=c(-0.02,0.02),refMain
+                                   ,refSecondary,frequency=400
+                                   ,padding="zeroes",using=c(9.5,10),from=y
                                    ,optimizationOptions=list(
                                      optimization=list(kind="lm")
                                      ,shape=list(kind="lorentzian"
@@ -32,15 +33,16 @@ referenceDeconvolution <- function(x,y,rOref=c(-0.02,0.02),signals,frequency=400
   #roi, or even beyond the range of x (is that even possible on a sensible roi?)
   #TBD: handle the case where neither end of the signal's delta reaches an extreme
   #of the roi
-  optimizeOverlappedSignal <- function(x,y,signal,...){
+  optimizeOverlappedSignal <- function(x,y,roi,...){
     l_x <- length(x)
-    x_signal <- x[crop(x,signal$delta)]
+    x_signal <- x[crop(x,roi)]
     #print(x_signal)
-    y_signal <- y[crop(x,signal$delta)]
+    y_signal <- y[crop(x,roi)]
     #print(y_signal)
     center <- which.max(y_signal)
     #print(center)
-    signal$delta <- x_signal[center]
+    signal <- list(delta=x_signal[center])
+    #signal$delta <- x_signal[center]
     l_s <- length(y_signal)
     if (y_signal[1] > y_signal[length(x_signal)]){
       #plot(y_signal)
@@ -60,7 +62,7 @@ referenceDeconvolution <- function(x,y,rOref=c(-0.02,0.02),signals,frequency=400
     
     optimizeSignals(x,y_signal,signals=list(signal),...)
   }
-  
+
   #parse using as chem. shift. Any other form will be left for pad to parse.
   if (is.numeric(using) & length(using) == 2)
     using <- crop(x,using)
@@ -71,16 +73,15 @@ referenceDeconvolution <- function(x,y,rOref=c(-0.02,0.02),signals,frequency=400
     stop()
   }
   
-  #Build default TSP model, if necessary
-  if (missing(signals)){
-    #Compute the inner extreme of the region where satellites' maxima are sought
-    satellites <- 2.7 / frequency
-    signals <- list(clean=list(list(delta=0))
-                    ,overlap=list(
-                      list(delta=c(rOref[1],-satellites))
-                      ,list(delta=c(satellites,rOref[2]))
-                    ))
-  }
+  # if (missing(signals)){
+  #   #Compute the inner extreme of the region where satellites' maxima are sought
+  #   satellites <- 2.7 / frequency
+  #   signals <- list(clean=list(list(delta=0))
+  #                   ,overlap=list(
+  #                     list(delta=c(rOref[1],-satellites))
+  #                     ,list(delta=c(satellites,rOref[2]))
+  #                   ))
+  # }
   
   #avoid zeros in y
   #y[y==0] <- zero
@@ -95,7 +96,7 @@ referenceDeconvolution <- function(x,y,rOref=c(-0.02,0.02),signals,frequency=400
     cat(crayon::red("referenceDeconvolution >>", "invalid rOref\n"))
     stop()
   }
-  
+
   #calculate trailing zeros outside of the rOref
   #trail_l <- rep(0,which.max(rOref) - 1)
   #trail_r <- rep(0,which.max(rev(rOref)) - 1)
@@ -117,48 +118,87 @@ referenceDeconvolution <- function(x,y,rOref=c(-0.02,0.02),signals,frequency=400
   if (hasNegative){
     shift <- x[1]
     x <- x - shift
-    for (i in 1:length(signals)){
-      for (j in 1:length(signals[[i]])){
-        signals[[i]][[j]]$delta <- signals[[i]][[j]]$delta - shift
-      }
-    }
+    if (!missing(refMain)) refMain <- refMain - shift
+    if (!missing(refSecondary))
+      refSecondary <- lapply(refSecondary, function(i) i - shift)
+    # for (i in 1:length(signals)){
+    #   for (j in 1:length(signals[[i]])){
+    #     if (!is.null(signals[[i]][[j]]$delta))
+    #       signals[[i]][[j]]$delta <- signals[[i]][[j]]$delta - shift
+    #   }
+    # }
   }
   #print(signals)
   #fit model
-  main <- optimizeSignals(x[rOref],y[rOref],signals=signals$clean
-                               ,frequency=frequency
-                               ,options=optimizationOptions)
-  #print(main$signals)
-  satellite1 <- optimizeOverlappedSignal(x[rOref],y[rOref],signals$overlap[[1]]
-                                         ,frequency=frequency
-                                         ,options=optimizationOptions)
-  #print(satellite1$signals)
-  satellite2 <- optimizeOverlappedSignal(x[rOref],y[rOref],signals$overlap[[2]]
-                                         ,frequency=frequency
-                                         ,options=optimizationOptions)
-  #print(satellite2$signals)
-  if (is.null(main) | is.null(satellite1) | is.null(satellite2)){
-      cat(crayon::yellow("referenceDeconvolution>>"
-                         ,"signal fitting with fitSignals in the rOref returned NULL\n"
-                         ,"deconvolution aborted\n"
-                         ,"returning the input spectrum\n"))
-      return(y)
+  #main reference
+  if (missing(refMain)){
+    refModel <- fitSignals(x,y,signals=refMain,roi=rOref,frequency=frequency,...)
   }
-  #refModel <- rbind(main$signals,satellite1$signals,satellite2$signals)
-  #print(refModel)
-  refModel <- rbind(signalsToY(x,main$signals,frequency=frequency)
-                  ,signalsToY(x,satellite1$signals,frequency=frequency)
-                  ,signalsToY(x,satellite2$signals,frequency=frequency)
-                             )
-  refModel <- colSums(refModel)
+  else
+    refModel <- optimizeSignals(x[rOref],y[rOref],signals=refMain
+                                ,frequency=frequency
+                                ,options=optimizationOptions)
+  if (is.null(refModel)){
+    cat(crayon::yellow("referenceDeconvolution>>"
+                       ,"signal fitting with fitSignals in the rOref returned NULL\n"
+                       ,"deconvolution aborted\n"
+                       ,"returning the input spectrum\n"))
+    return(y)
+  }
+  #refModel <- signalsToY(x,refModel,frequency=frequency)
+   refModel <- signalsToY(x,refModel$signals,frequency=frequency)
+  #Fit secondary signals (e.g. satellites), assuming they are overlaped singlets
+  #For each of these we need a "clear" range to detect maximum and symmetrize
+  #the whole point of this part is that we are not good at picking overlapped
+  #signals
+  if (!missing(refSecondary)){
+    for (roi in refSecondary){
+      overS <- optimizeOverlappedSignal(x[rOref],y[rOref],roi=roi
+                                        ,frequency=frequency
+                                        ,options=optimizationOptions)
+      if (is.null(overS)){
+        cat(crayon::yellow("referenceDeconvolution>>"
+                           ,"signal fitting with fitSignals in the rOref returned NULL\n"
+                           ,"deconvolution aborted\n"
+                           ,"returning the input spectrum\n"))
+        return(y)
+      }
+      refModel <- refModel + signalsToY(x,refModel$signals,frequency=frequency)
+    }
+  }
   
+    # main <- optimizeSignals(x[rOref],y[rOref],signals=signals$clean
+    #                              ,frequency=frequency
+    #                              ,options=optimizationOptions)
+    # #print(main$signals)
+    # satellite1 <- optimizeOverlappedSignal(x[rOref],y[rOref],signals$overlap[[1]]
+    #                                        ,frequency=frequency
+    #                                        ,options=optimizationOptions)
+    # #print(satellite1$signals)
+  #   satellite2 <- optimizeOverlappedSignal(x[rOref],y[rOref],signals$overlap[[2]]
+  #                                          ,frequency=frequency
+  #                                          ,options=optimizationOptions)
+  #   #print(satellite2$signals)
+  #   if (is.null(main) | is.null(satellite1) | is.null(satellite2)){
+  #       cat(crayon::yellow("referenceDeconvolution>>"
+  #                          ,"signal fitting with fitSignals in the rOref returned NULL\n"
+  #                          ,"deconvolution aborted\n"
+  #                          ,"returning the input spectrum\n"))
+  #       return(y)
+  #   }
+  #   refModel <- rbind(signalsToY(x,main$signals,frequency=frequency)
+  #                   ,signalsToY(x,satellite1$signals,frequency=frequency)
+  #                   ,signalsToY(x,satellite2$signals,frequency=frequency)
+  #                              )
+  #   refModel <- colSums(refModel)
+  # }
   #shift the scale back to its original position, if necessary
   #Warning: only doing it for diagnostics; not needed once stable
   if (hasNegative) x <- x + shift
   
-  plot(x[crop(x,c(0.015,0.03))],ref[crop(x,c(0.015,0.03))],type="l")
-  plot(x[rOref],y[rOref],type="l")
-  lines(x[rOref],refModel[rOref],col="red")
+  #plot(x[crop(x,c(0.015,0.03))],ref[crop(x,c(0.015,0.03))],type="l")
+  #plot(x[rOref],y[rOref],type="l")
+  #lines(x[rOref],refModel[rOref],col="red")
   
   #refModel <- signalsToY(x,refModel,frequency=frequency)
   #lines(x[rOref],refModel[rOref],col="red")
@@ -180,6 +220,6 @@ referenceDeconvolution <- function(x,y,rOref=c(-0.02,0.02),signals,frequency=400
   
   #deconv., correct and go back to freq. domain
   res <- Re(fft(y * refModel / ref))
-  lines(x[rOref],res[rOref],type="l",col="blue")
+  #lines(x[rOref],res[rOref],type="l",col="blue")
   res
 }

@@ -21,7 +21,7 @@ peaksToSignals <- function(peaks,grouping){
     cat(crayon::yellow("peaksToSignals>>", "no peaks to process"))
     return(NULL)
   }
-  #If no grouping, all peaks to one signal (singulet)
+  #If no grouping, all peaks to one signal (singlet)
   if(missing(grouping))
     grouping <- list(1:cp)
   qc <- sort(unlist(grouping))
@@ -38,13 +38,19 @@ peaksToSignals <- function(peaks,grouping){
   # list(delta=delta,peaks=pks) 
   #})
   #jsonlite::fromJSON(jsonlite::toJSON(signals,auto_unbox=TRUE))
-  delta <- sapply(grouping, function(group){
-    mean(peaks[group,]$x)
+  res <- lapply(grouping, function(group){
+    list(delta=mean(peaks[group,]$x),peaks=peaks[group,])
   })
-  picos <- lapply(grouping, function(group){
-    peaks[group,]
-  })
-  df <- data.frame(delta=delta)
-  df$peaks <- picos
-  df
+  
+  jsonlite::fromJSON(jsonlite::toJSON(res,auto_unbox=TRUE))
+  
+  # delta <- sapply(grouping, function(group){
+  #   mean(peaks[group,]$x)
+  # })
+  # picos <- lapply(grouping, function(group){
+  #   peaks[group,]
+  # })
+  # df <- data.frame(delta=delta)
+  # df$peaks <- picos
+  # df
 }

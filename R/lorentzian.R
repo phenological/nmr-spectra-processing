@@ -15,3 +15,4 @@ lorentzian <- function(x,max=1,mean=0,fwhm=1){
   mapply(function(max.,mean.,gamma2.) max. * gamma2./((x-mean.)^2+gamma2.)
          , max, mean, gamma2)
 }
+
