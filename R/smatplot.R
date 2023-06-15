@@ -18,19 +18,21 @@ smatplot <- function(x, Y, by, roi, type="l"
     x <- x[fi]
     Y <- Y[,fi]
   }
+  else{
+    roi <- TRUE
+  }
   if (reverse){
-    x <- rev(x)
-    Y <- t(apply(Y,1,rev))
+    roi <- rev(roi)
   }
     
-  if (missing(by)) matplot(x,t(Y),type=type,...)
+  if (missing(by)) matplot(x,t(Y),type=type,xlim=roi,...)
   else{
     colores <- brewer.pal(n=by,name=palette)
     n <- floor(dim(Y)[1] / by)
     r <- dim(Y)[1] %% by
     for (j in 1:n){
       soi <- 1:by + by*(j-1)
-      matplot(x,t(Y[soi,]),type=type,col=colores[1:by],...)
+      matplot(x,t(Y[soi,]),type=type,col=colores[1:by],xlim=roi,...)
       if (!missing(legend)){
         if (missing(label))
           legend(legend,legend=soi,text.col=colores[1:by])
@@ -41,7 +43,7 @@ smatplot <- function(x, Y, by, roi, type="l"
     } 
     if (r>0){
       soi <- (by*n+1):(by*n+r)
-      matplot(x,t(Y[soi,]),type=type,col=colores[1:by],...)
+      matplot(x,t(Y[soi,]),type=type,col=colores[1:by],xlim=roi,...)
       if (!missing(legend)){
         if (missing(label))
           legend(legend,legend=soi,text.col=colores[1:by])

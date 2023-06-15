@@ -6,40 +6,61 @@
 #' @param method character or function, the method of integration. Currently implemented:  "fwhm": full-width-at-half-maximum times maximum approximation on the fitted  signal  "rectangle": sum of the areas of rectangles centered at each y point, with  width equal to the difference between x points  "sum": sum of y
 #' @returns numeric, the value of the integral
 #' @export
-#TBD: base R integrate as method, ml-side integration, other integration methods
+#There are major inconsistencies with what I take to be a signal. This is to
+#a large extent a reflection of the inconsistency of jsonlite's parsing
+#and the kind of irreproducible objects it can generate
+#I am workarounding it everywhere, a robust solution is needed
 integral <- function(x,y,signal,method="fwhm",frequency=400){
   if (missing(signal)){
     if (missing(y)){
-      cat(crayon::red("integral>>", "Neither fitted signal nor y provided\n"))
+      cat(crayon::red("nmr-spectra-processing::integral>>"
+                      , "Need either signal or y\n"))
       stop()
     }
     if (method=="rect"){
       if (missing(x)){
-        cat(crayon::red("integral>>", "Cannot use 'rect' method without 'x' argument\n"))
+        cat(crayon::red("nmr-spectra-processing::integral>>"
+                        , "Cannot use 'rect' method without 'x' argument\n"))
         stop()
-      } 
+      }
       if (length(x) == 1) return(sum(y)*x)
       return(sum(y)*(x[2]-x[1]))
     }
     if (method=="sum") return(sum(y))
-    cat(crayon::red("integral>>", "No valid method provided\n"))
+    cat(crayon::red("nmr-spectra-processing::integral>>"
+                    , "No valid method provided\n"))
     stop()
   }
-  #trick to make sure signal is a data.frame even if integral received a list
+  if(!is.null(signal$peaks)) signal <- signal$peaks
   if(!is.data.frame(signal) & is.list(signal)){
-    signals <- jsonlite::fromJSON(jsonlite::toJSON(list(signal)))
+    signal <- jsonlite::fromJSON(jsonlite::toJSON(signal))
   }
-  if (method == "fwhm") return(sum(signal$y * signal$shape$fwhm / frequency))
-  if (method == "rect"){
-    if (missing(x)){
-      cat(crayon::red("integral>>", "Cannot use 'rect' method without 'x' argument\n"))
-      stop()
+  if (method == "fwhm"){
+    #I assume all peaks are of the same shape because otherwise it's a madhouse!
+    s <- signal$shape$kind[1]
+    w <- signal$shape$fwhm / frequency
+    h <- signal$y
+    if (s == "pseudoVoigt"){
+      mu <- signal$shape$mu
+      return(sum(mu * w * h) * pi / 2 + sum((1-mu) * w * h) * 1.064467)
     }
-    y <- signalsToY(x,signals,frequency)
-    return(sum(y)*(x[2]-x[1]))
+    if (s == "lorentzian")
+      return( pi * sum(w * h) / 2)
+    if (s == "gaussian")
+      return(1.064467 * sum(w * h))
+    cat(crayon::red("integral>>","Invalid signal shape",s,"\n"))
   }
+  if (missing(x)){
+    cat(crayon::red("nmr-spectra-processing::integral>>"
+                    , "Need x to interpolate signal to integrate using method"
+                    ,method,"\n"))
+    stop()
+  }
+  y <- signalsToY(x,list(signal),frequency)
+  if (method == "rect") return(sum(y)*(x[2]-x[1]))
   if (method=="sum") return(sum(y))
   if (is.function(method)) return(method(x,y,signal))
-  cat(crayon::red("integral>>","No valid method provided\n"))
+  cat(crayon::red("nmr-spectra-processing::integral>>"
+                  ,"No valid method provided\n"))
   stop()
 }

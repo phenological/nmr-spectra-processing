@@ -39,8 +39,8 @@ autoPeaksPicking <- function(x,y,v8Context=ct,path="nmrProcessing"
       #cat(threshold,options$thresholdFactor)
       tf <- options$thresholdFactor - rStep
       options$thresholdFactor <- tf
-      cat(tf,options$thresholdFactor,"\n")
-      print("recurring")
+      #cat(tf,options$thresholdFactor,"\n")
+      # print("recurring")
       return(autoPeaksPicking(x,y,v8Context,path=path
                               ,minimum=minimum,recursive=TRUE
                               ,threshold=tf,rEnd=rEnd,rStep=rStep
