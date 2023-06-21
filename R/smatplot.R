@@ -1,38 +1,58 @@
 #' Fast spectra overlay plot
 #' 
-#' Wrapper to matplot for plotting spectra. Crude compared to ggplot2 but a lot faster.
+#' Wrapper to graphics::matplot for plotting spectra. Crude compared to ggplot2 but faster.
 #' @param x numeric, your x scale e.g. ppm
-#' @param Y matrix, spectra matrix, one spectrum per row
-#' @param limits, numeric, optional, limits of the region to be plotted. Defaults to full spectra.
-#' @param by, numeric, optional, number of spectra to be overlay on each plot
-#' @param type, optional, defaults to "l" (lines), default strongly recommended
-#' @param ..., additional options to be passed to matplot
+#' @param y numeric or matrix, spectra intensities, one spectrum per row
+#' @param roi, numeric, optional, limits of the Region Of Interest to be plotted. Defaults to the range of x.
+#' @param by, numeric, optional, number of spectra to be overlayed on each plot
+#' @param type, optional, defaults to "l" (lines), default recommended for speed
+#' @param lty, optional, defaults to 1 (continuous line)
+#' @param 
+#' @param ..., additional arguments to be passed to matplot
 #' @returns NULL
 #' @import RColorBrewer
 #' @export
 #Candidate to utilities.R
-smatplot <- function(x, Y, by, roi, type="l"
-                     ,reverse=FALSE,legend,label,palette="Paired",...){
+smatplot <- function(x, y, by, roi, type="l",lty=1
+                     ,reverse=TRUE,legend,label,palette="Set1",...){
+  if (is.matrix(y))
+    y <- t(y)
+  else
+    y <- as.matrix(y)
+
+  #make color palette
+  n <- RColorBrewer::brewer.pal.info[palette,"maxcolors"]
+  colores <- RColorBrewer::brewer.pal(n=n,name=palette)
+  
   if (!missing(roi)){
     fi <- x >= roi[1] & x <= roi[2]
     x <- x[fi]
-    Y <- Y[,fi]
+    y <- y[fi,]
   }
   else{
-    roi <- TRUE
+    roi <- c(min(x),max(x))
   }
   if (reverse){
     roi <- rev(roi)
   }
     
-  if (missing(by)) matplot(x,t(Y),type=type,xlim=roi,...)
+  if (missing(by)){
+    matplot(x,y,type=type,lty=lty,xlim=roi,col=colores,...)
+    if (!missing(legend)){
+      if (missing(label))
+        legend(legend,legend=1:dim(y)[2],text.col=colores)
+      else
+        legend(legend,legend=label[1:dim(y)[2]]
+               ,text.col=colores)
+    }
+    
+  } 
   else{
-    colores <- brewer.pal(n=by,name=palette)
-    n <- floor(dim(Y)[1] / by)
-    r <- dim(Y)[1] %% by
+    n <- floor(dim(y)[2] / by)
+    r <- dim(y)[2] %% by
     for (j in 1:n){
       soi <- 1:by + by*(j-1)
-      matplot(x,t(Y[soi,]),type=type,col=colores[1:by],xlim=roi,...)
+      matplot(x,y[,soi],type=type,lty=lty,col=colores[1:by],xlim=roi,...)
       if (!missing(legend)){
         if (missing(label))
           legend(legend,legend=soi,text.col=colores[1:by])
@@ -43,7 +63,7 @@ smatplot <- function(x, Y, by, roi, type="l"
     } 
     if (r>0){
       soi <- (by*n+1):(by*n+r)
-      matplot(x,t(Y[soi,]),type=type,col=colores[1:by],xlim=roi,...)
+      matplot(x,y[,soi],type=type,lty=lty,col=colores[1:by],xlim=roi,...)
       if (!missing(legend)){
         if (missing(label))
           legend(legend,legend=soi,text.col=colores[1:by])
