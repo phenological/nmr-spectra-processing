@@ -28,6 +28,7 @@ calibrateSpectra <- function(x, Y, ref, rOref, cshift, j, fwhm
                  ,tsp=c(-0.1,0.1)
                  )
   js <- list(glucose=0.0065,alanine=0.0125)
+  cshifts <- list(glucose=5.225,alanine=1.48,tsp=0)
   
   #qc ref
   if (missing(ref)){
@@ -60,7 +61,12 @@ calibrateSpectra <- function(x, Y, ref, rOref, cshift, j, fwhm
     }
 
   #qc or compute cshift
-  if (missing(cshift)) cshift <- mean(rOref)
+  if (missing(cshift)){
+    if (missing(ref))
+      cshift <- mean(rOref)
+    else
+      cshift <- chifts[[ref]]
+  } 
   else{
     if (!is.numeric(cshift) | (cshift < rOref[1]) | (cshift > rOref[2])){
       cat(crayon::red("calibrateSpectra >>", "Invalid cshift value\n"))

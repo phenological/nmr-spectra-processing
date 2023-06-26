@@ -1,6 +1,5 @@
 pad <- function(x, n, side = 0, method="sampling"
-                ,using=(length(x)*14/15):length(x),from=x){
-  N <- length(x)
+                ,from=x,using=as.integer(length(x)*14/15):length(from)){
   if (!side %in% c(-1,0,1)){
     cat(crayon::red("nmr-spectra-processing::pad >>"
                     ,"wrong side specification: use -1 for left,"
@@ -26,7 +25,7 @@ pad <- function(x, n, side = 0, method="sampling"
       if (length(using) != length(from)){
         cat(crayon::yellow("pad >>", "invalid argument value for 'using'",
                         "switching to default last 1/15 points for sampling"))
-        using <- as.integer((length(from)*14/15):length(from))
+        using <- as.integer(length(from)*14/15):length(from)
       }
     }
     else{
@@ -36,17 +35,18 @@ pad <- function(x, n, side = 0, method="sampling"
       else{
         cat(crayon::yellow("pad >>", "invalid argument value for 'using'",
                            "switching to default c(9.5,10) for sampling"))
-        using <- as.integer((length(from)*14/15):length(from))
+        using <- as.integer(length(from)*14/15):length(from)
       }
     }
     return(switch(side+2
-                  ,c(sample(from[using],n,replace=TRUE)/2, x)
-                  ,c(sample(from[using],n,replace=TRUE)/2, x 
-                     , sample(from[using],n,replace=TRUE)/2)
-                  ,c(x,sample(from[using],n,replace=TRUE)/2)
+                  ,c(sample(from[using],n,replace=TRUE), x)
+                  ,c(sample(from[using],n,replace=TRUE), x 
+                     , sample(from[using],n,replace=TRUE))
+                  ,c(x,sample(from[using],n,replace=TRUE))
     ))
   }
   if (method == "circular"){
+    N <- length(x)
     #circular padding with more elements than the series contains makes no sense
     if (n>N){
       cat(crayon::red("nmr-spectra-processing::pad >>"
@@ -54,7 +54,7 @@ pad <- function(x, n, side = 0, method="sampling"
                       ,"in circular padding"))
       stop()
     }
-    #circular padding on both ends makes no sense
+    #circular padding on both ends makes no sense; right padding by default
     if (side==-1) return(c(x[N-n+(1:n)],x))
     return(c(x,x[1:n]))
   }
