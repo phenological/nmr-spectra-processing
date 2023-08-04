@@ -30,7 +30,7 @@ smatplot <- function(x, y, by, roi, type="l",lty=1
     y <- y[fi,]
   }
   else{
-    roi <- c(min(x),max(x))
+    roi <- range(x)#c(min(x),max(x))
   }
   if (reverse){
     roi <- rev(roi)
@@ -52,10 +52,10 @@ smatplot <- function(x, y, by, roi, type="l",lty=1
     r <- dim(y)[2] %% by
     for (j in 1:n){
       soi <- 1:by + by*(j-1)
-      matplot(x,y[,soi],type=type,lty=lty,col=colores[1:by],xlim=roi,...)
+      matplot(x,y[,soi],type=type,lty=lty,col=colores,xlim=roi,...)
       if (!missing(legend)){
         if (missing(label))
-          legend(legend,legend=soi,text.col=colores[1:by])
+          legend(legend,legend=soi,text.col=colores)
         else
           legend(legend,legend=label[soi]
                  ,text.col=colores)
@@ -63,12 +63,12 @@ smatplot <- function(x, y, by, roi, type="l",lty=1
     } 
     if (r>0){
       soi <- (by*n+1):(by*n+r)
-      matplot(x,y[,soi],type=type,lty=lty,col=colores[1:by],xlim=roi,...)
+      matplot(x,y[,soi],type=type,lty=lty,col=colores,xlim=roi,...)
       if (!missing(legend)){
         if (missing(label))
-          legend(legend,legend=soi,text.col=colores[1:by])
+          legend(legend,legend=soi,text.col=colores)
         else
-          legend(legend,legend=label[soi],text.col=colores[1:by])
+          legend(legend,legend=label[soi],text.col=colores)
       }
     } 
   }

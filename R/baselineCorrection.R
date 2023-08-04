@@ -5,7 +5,7 @@
 #' @importFrom ptw baseline.corr
 #' @details ptw:baseline.corr wrapper. Estimates baseline by asymmetric least squares using ptw::asysm and subtracts it from the spectra
 #' @export
-baselineCorrection <- function(Y, ...) {
-  bc <- ptw::baseline.corr(Y,...)
+baselineCorrection <- function(y, ...) {
+  bc <- ptw::baseline.corr(y,...)
   return(bc)
 }

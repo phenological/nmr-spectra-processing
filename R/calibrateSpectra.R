@@ -65,7 +65,7 @@ calibrateSpectra <- function(x, Y, ref, rOref, cshift, j, fwhm
     if (missing(ref))
       cshift <- mean(rOref)
     else
-      cshift <- chifts[[ref]]
+      cshift <- cshifts[[ref]]
   } 
   else{
     if (!is.numeric(cshift) | (cshift < rOref[1]) | (cshift > rOref[2])){
