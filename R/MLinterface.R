@@ -1,3 +1,8 @@
+#Initialization of the global v8 context within the package namespace
+#Necessary to interact with js and use ml-nmrSpectraProcessing capabilities
+nsp.env <- new.env()
+nsp.env$ct <- V8::v8()
+
 #' Runs JS script on x-y data and returns the result on the R-side
 #' 
 #' xyApplyJS parses two R vectors into a ml xy object {x: [], y:[]}, passes the 
@@ -18,9 +23,16 @@
 #' As a side effect, the variable xy will be (re)set on thev8Context
 #' @examples xyApplyJS(x=c(1,2,3),y=c(1,2,3),script="{x:xy.x*2,y:xy.y-3}")
 #' @import V8
-#' @export
 
-xyApplyJS <- function(x,y,script,v8Context=ct){
-  v8Context$assign("xy",list(x=x,y=y))
-  v8Context$get(JS(script))
+xyApplyJS <- function(x,y,script){
+  nsp.env$ct$assign("xy",list(x=x,y=y))
+  nsp.evn$ct$get(JS(script))
+}
+
+mlPeakToPeak <- function(mlPeak){
+  
+}
+
+mlSignalToSignal <- function(mlSignal){
+  
 }

@@ -17,7 +17,7 @@
 calibrateSpectra <- function(x, Y, ref, rOref, cshift, j, fwhm
                              , maxShift=1/3, threshold=0.2, padding="sampling"
                              , using=c(9.5,10), from=apply(Y,2,median)
-                             , plot=FALSE,...){
+                             , plot=FALSE, shift=TRUE, ...){
   #parse using as chem. shift. Any other form will be left for pad to parse.
   if (is.numeric(using) & length(using) == 2)
     using <- crop(x,using)
@@ -114,15 +114,21 @@ calibrateSpectra <- function(x, Y, ref, rOref, cshift, j, fwhm
                    ,fwhm=fwhm))
   
   #Align normalized spectra on rOref to reference and get shifts
-  normS <- t(apply(Y[,rOref],1,function(y) y / max(y)))
+  if (is.matrix(Y)){
+    normS <- t(apply(Y[,rOref],1,function(y) y / max(y)))
+  } else{
+    normS <- Y[,rOref]
+    normS <- normS / max(normS)
+  }
   shifts <- alignSeries(normS, ref, shift=FALSE
                         , lag.max=length(ref) * maxShift, threshold=threshold
                         , plot=plot, ...)
-  
-  #Shift whole spectra by the corresponding shifts
-  t(sapply(1:dim(Y)[1],function(i){
-    shift <- shifts[i]
-    y <- Y[i,]
-    shiftSeries(y,shift, padding=padding, using=using, from=from)
-  }))
+  if (shift){
+    #Shift whole spectra by the corresponding shifts
+    t(sapply(1:dim(Y)[1],function(i){
+      shift <- shifts[i]
+      y <- Y[i,]
+      shiftSeries(y,shift, padding=padding, using=using, from=from)
+    }))
+  } else shifts
 }

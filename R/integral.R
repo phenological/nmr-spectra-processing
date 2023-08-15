@@ -21,6 +21,37 @@ setGeneric("integral", function(nmr,method){
 })
 
 #' @rdname integral-methods
+#' @aliases integral,NMRSignal1D,character-method
+setMethod("integral"
+          ,signature(nmr = "NMRSignal1D", method="character")
+          ,definition = function(nmr, method) {
+            if (grepl("^f",method)){
+              mu <- nmr@shape$param$mu
+              w <- nmr@shape$param$fwhm
+              h <- sapply(nmr@peaks, function(p) p@y)
+              return(sum(mu * w * h) * pi / 2 + sum((1-mu) * w * h) * 1.064467)
+            }
+            cat(crayon::red("nmrSpectraProcessing::integral >>"
+                            ,"invalid integration method"
+                            ,"for NMRSignal1D object"))
+          })
+
+#' @rdname integral-methods
+#' @aliases integral,NMRPeak1D,character-method
+setMethod("integral"
+          ,signature(nmr = "NMRPeak1D", method="character")
+          ,definition = function(nmr, method) {
+            if (grepl("^f",method)){
+              mu <- nmr@shape$param$mu
+              w <- nmr@shape$param$fwhm
+              h <- nmr@shape$param$y
+              return(sum(mu * w * h) * pi / 2 + sum((1-mu) * w * h) * 1.064467)
+            }
+            cat(crayon::red("nmrSpectraProcessing::integral >>"
+                            ,"invalid integration method for NMRPeak1D object"))
+          })
+          
+#' @rdname integral-methods
 #' @aliases integral,NMRSignalModel,character-method
 setMethod("integral"
           ,signature(nmr = "NMRSignalModel", method = "character")
@@ -48,7 +79,24 @@ setMethod("integral"
               )
             }
             cat(crayon::red("nmrSpectraProcessing::integral >>"
-                            ,"invalid method"))
+                            ,"invalid integration method for"
+                            ,"NMRSignalModel1D object"))
+          })
+
+#' @rdname integral-methods
+#' @aliases integral,NMRPeak1D,function-method
+setMethod("integral"
+          ,signature(nmr="NMRPeak1D", method = "function")
+          ,definition = function(nmr,method){
+            method(nmr)
+          })
+
+#' @rdname integral-methods
+#' @aliases integral,NMRSignal1D,function-method
+setMethod("integral"
+          ,signature(nmr="NMRSignal1D", method = "function")
+          ,definition = function(nmr,method){
+            method(nmr)
           })
 
 #' @rdname integral-methods
