@@ -15,12 +15,12 @@
 #' @returns calibrated spectra matrix
 #' @importFrom stats ccf
 calibrateSpectra <- function(x, Y, ref, rOref, cshift, j, fwhm
-                             , maxShift=1/3, threshold=0.2, padding="sampling"
+                             , maxShift=1/3, threshold=0.2, padding="zeroes"
                              , using=c(9.5,10), from=apply(Y,2,median)
                              , plot=FALSE, shift=TRUE, ...){
   #parse using as chem. shift. Any other form will be left for pad to parse.
   if (is.numeric(using) & length(using) == 2)
-    using <- crop(x,using)
+    using <- crop(x,roi=using)
   
   #standards for refs
   rOrefs <- list(glucose=c(5.15,5.3)
@@ -117,7 +117,7 @@ calibrateSpectra <- function(x, Y, ref, rOref, cshift, j, fwhm
   if (is.matrix(Y)){
     normS <- t(apply(Y[,rOref],1,function(y) y / max(y)))
   } else{
-    normS <- Y[,rOref]
+    normS <- Y[rOref]
     normS <- normS / max(normS)
   }
   shifts <- alignSeries(normS, ref, shift=FALSE
