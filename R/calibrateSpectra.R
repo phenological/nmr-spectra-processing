@@ -93,7 +93,7 @@ calibrateSpectra <- function(x, Y, ref, rOref, cshift, j, fwhm
   }
   
   #qc fwhm
-  if (missing(fwhm)) fwhm=0.0017
+  if (missing(fwhm)) fwhm=0.0001
   else{
     if (!is.numeric(fwhm) | length(fwhm)!=1){
       cat(crayon::red("calibrateSpectra >>", "Invalid fwhm\n"))
