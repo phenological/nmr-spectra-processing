@@ -87,13 +87,11 @@ alignSeries <- function(y, ref="median", threshold=0.6, shift=TRUE
     from <- ref
   if (missing(using))
     using <- as.integer(dim(y)[2]*14/15):dim(y)[2]
-  return(t(apply(y,1,function(v){
-    
+  return(apply(y,1,function(v){
     alignSeries.numeric(v, ref=ref, threshold=threshold, shift=shift
                         ,padding=padding, using=using
                         ,from=from, plot = plot, ...)
-  })
-  )
+    })
   )
   
   # if (is.matrix(res))
