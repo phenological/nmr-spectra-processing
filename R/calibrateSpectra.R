@@ -6,6 +6,7 @@
 #' @param rOref numeric, optional. Limits of the Region of Reference within which the reference signal for calibration will be aligned. Defaults: 5.15 - 5.3 for glucose, 1.4 - 1.56 for alanine, and -0.2 - 0.2 for tsp.
 #' @param cshift numeric, chemical shift where the reference signal should be in the output. Defaults to the center of the rOref
 #' @param j numeric. For doublet references, the coupling constant of the doublet. Defaults: .0065 for glucose and .0125 for alanine. 
+#' @param fwhm numeric. The full width at half maximum of the model peaks (see details). Default value works well for TSP but a wider peak may be needed when aligning to doublets to account for variation in apparent j
 #' @param threshold numeric, minimum cross-correlation requiered for alignment. See alignSeries
 #' @param method character, the method to be used to fill the empty extremes of the shifted series (padding). See 'pad' for details. Default: "sampling".
 #' @param using numeric, the number of points from the extremes to be used for padding in the "sampling" method. See 'pad' for details. Default: 1/15th of the series' length.
@@ -27,7 +28,7 @@ calibrateSpectra <- function(x, Y, ref, rOref, cshift, j, fwhm
                  ,alanine=c(1.4,1.56)
                  ,tsp=c(-0.1,0.1)
                  )
-  js <- list(glucose=0.0065,alanine=0.0125)
+  js <- list(glucose=0.0065,alanine=0.0121)
   cshifts <- list(glucose=5.225,alanine=1.48,tsp=0)
   
   #qc ref
@@ -125,10 +126,14 @@ calibrateSpectra <- function(x, Y, ref, rOref, cshift, j, fwhm
                         , plot=plot, ...)
   if (shift){
     #Shift whole spectra by the corresponding shifts
-    t(sapply(1:dim(Y)[1],function(i){
-      shift <- shifts[i]
-      y <- Y[i,]
-      shiftSeries(y,shift, padding=padding, using=using, from=from)
-    }))
+    if (is.matrix(Y)){
+      t(sapply(1:dim(Y)[1],function(i){
+        shift <- shifts[i]
+        y <- Y[i,]
+        shiftSeries(y,shift, padding=padding, using=using, from=from)
+      }))
+    } else{
+      shiftSeries(y,shift,padding=padding,using=usgin,from=from)
+    }
   } else shifts
 }
