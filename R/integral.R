@@ -2,14 +2,15 @@
 #' 
 #' @param nmr a NMRSignalModel or a list with named elements x and y
 #' @param method character or function, see details
-#' @details Either conmputes the integrals of all signals in a signal model, or
-#' the integral of a NMR region specified as an "xy" pair. If method is a function,
-#' this function is either (s)applied to the output signals of the NMRSignalModel
-#'  or the passed the x and y as arguments, and the output is returned. If
-#'  method is a string, it is interpreted as a specifier for a standar method.
-#'  Methods implemented in this way are: "sum" (total intensity), "rect" (Riemann
-#'  sum approximation) and "fwhm" (full-width at half-maximum approximation, 
-#'  only valid for NMRSignalModel)
+#' @details Either conmputes the integrals of a fusion::NMRSignal1D, of
+#' each signal in a fusion::NMRSignalModel (through sapply on signalsOutput),
+#'  or of a NMR region specified as list(x,y). If method is a function, 
+#'  this function is used to compute the integrals; in the case of a list
+#'  the elements x and y are passed as arguments. If method is a string, it is 
+#'  interpreted as a specifier for a standar method.Methods implemented in this 
+#'  way are: "sum" (total intensity, not yet implemented for non-list arguments),
+#'  "rect" (Riemann sum approximation, not yet implemente for non-lst arguments)
+#'   and "fwhm" (full-width at half-maximum approximation, not valid for list)
 #'  @return numeric, the integrals of the signals in the NMRSignalModel or the 
 #' NMR region
 #' @importClassesFrom fusion NMRPeak1D

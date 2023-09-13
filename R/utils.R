@@ -145,40 +145,43 @@ signalDomain <- function(aSignal, n=3){
   }
 }
 
-#WARNING: not exported, watch for collisions nevertheless (e.g. nmr-spectra-quantification::pseudoVoigt)
+#WARNING: vectorized functions replaced by nmr.spectra.quantification functions
+#for consistency
 #' Gaussian function
 #' 
 #' Interpolates a gaussian with the given parameters on the given points.
 #' Vectorized.
 #' 
-#' @export
 #' @param x numeric, points to be interpolated
 #' @param Max numeric, maxima of the gaussian(s)
 #' @param Mean numeric, mean(s) of the gaussian(s)
 #' @param fwhm numeric, full-width-at-half-max(s) of the gaussians(s)
 #' @returns numeric matrix with gaussian(x) for each combination of parameters
 #' @examples gaussian(1:20,Max=1,Mean=c(10,15))
-gaussian <- function(x,max=1,mean=0,fwhm=1){
-  mapply(function(max.,mean.,fwhm.) max. * exp(-4*log(2)*((x-mean.)^2)/fwhm.^2)
-         , max, mean, fwhm)
+gaussian <- function(x,mean=0,max=1,fwhm=1){
+  max * exp(-4*log(2)*(((x - mean) / fwhm)^2))
+  # mapply(function(max.,mean.,fwhm.) max. * exp(-4*log(2)*((x-mean.)^2)/fwhm.^2)
+  #        , max, mean, fwhm)
 }
 
 #' Lorentzian function
 
 #' Interpolates a lorentzian with the given parameters on the given points. 
 #' Vectorized
-#' @export
 #' @param x numeric, points to be interpolated
 #' @param Max numeric, maxima of the lorentzian(s)
 #' @param Mean numeric, mean(s) of the lorentzian(s)
 #' @param fwhm numeric, full-width-at-half-max(s) of the lorentzians(s)
 #' @returns numeric matrix with lorentzian(x) for each combination of parameters
 #' @examples lorentzian(1:20,Max=1,Mean=c(10,15))
-lorentzian <- function(x,max=1,mean=0,fwhm=1){
+lorentzian <- function(x,mean=0,max=1,fwhm=1){
   gamma2 <- fwhm/2
-  gamma2 <- gamma2^2
-  mapply(function(max.,mean.,gamma2.) max. * gamma2./((x-mean.)^2+gamma2.)
-         , max, mean, gamma2)
+  gamma2 <- gamma2^ 2
+  max * gamma2/((x - mean)^2 + gamma2)
+  # gamma2 <- fwhm/2
+  # gamma2 <- gamma2^2
+  # mapply(function(max.,mean.,gamma2.) max. * gamma2./((x-mean.)^2+gamma2.)
+  #        , max, mean, gamma2)
 }
 
 #' Pseudo-Voigt function
@@ -188,7 +191,6 @@ lorentzian <- function(x,max=1,mean=0,fwhm=1){
 #' The pseudo-Voigt approximation approximates a Voigt function as a linear 
 #' combination of a lorentzian and a gaussian. 
 #' Vectorized.
-#' @export
 #' @param x numeric points to be interpolated
 #' @param mean numeric, mean of the distribution
 #' @param fwhm numeric, full width at half max of the distribution
@@ -197,12 +199,9 @@ lorentzian <- function(x,max=1,mean=0,fwhm=1){
 #' 1 - mu for the gaussian
 #' @returns numeric matrix with gaussian(x) for each combination of parameters
 #' @examples pseudoVoigt(1:20,Max=1,Mean=c(10,15),mu=c(0,0.5))
-pseudoVoigt <- function(x,max=1,mean=0,fwhm=1,mu=0){
-  # if (mu==0)
-  #   return(gaussian(x,max=max,mean=mean,fwhm=fwhm))
-  # if (mu==1)
-  #   return(lorentzian(x,max=max,mean=mean,fwhm=fwhm))
-  mapply(function(max.,mean.,fwhm.,mu.)
-    mu.*lorentzian(x,max.,mean.,fwhm.) + (1-mu.)*gaussian(x,max.,mean.,fwhm.)
-    , max, mean, fwhm, mu)
+pseudoVoigt <- function(x,mean=0,max=1,fwhm=1,mu=0){
+  (1 - mu) * gaussian(x, mean, max, fwhm) + mu * lorentzian(x, mean, max, fwhm)
+  # mapply(function(max.,mean.,fwhm.,mu.)
+  #   mu.*lorentzian(x,max.,mean.,fwhm.) + (1-mu.)*gaussian(x,max.,mean.,fwhm.)
+  #   , max, mean, fwhm, mu)
 }
