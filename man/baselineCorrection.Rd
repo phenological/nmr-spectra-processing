@@ -4,14 +4,23 @@
 \alias{baselineCorrection}
 \title{Baseline Correction}
 \usage{
-baselineCorrection(Y)
+baselineCorrection(y, ...)
 }
 \arguments{
-\item{Y}{matrix, series in rows}
+\item{y}{numeric or matrix, single spectrum intensities or intensities matrix
+with spectra in rows}
+
+\item{...}{other arguments to \code{\link[ptw]{asysm}}}
 }
 \value{
-a matrix of same size with each row being corrected
+a vector or matrix of the same dimensions as the input with
+baseline-corrected spectra.
 }
 \description{
-Baseline Correction
+Wrapper to \code{\link[ptw]{baseline.corr}}. Estimates baseline by asymmetric
+least squares and subtracts it from the spectra
+}
+\details{
+Presently this is \code{\link[ptw]{baseline.corr}} straight out of
+the box, wrapped and re-packaged for convenience.
 }

@@ -2,12 +2,17 @@
 #' 
 #' @param x numeric vector, series to be padded
 #' @param n numeric, number of points to be added
-#' @param side numeric, whether to pad at the start (-1), at the end (1, default) or at both extremes (0)
-#' @param method character, padding method. "zeroes" (default) pads with 0. "circular" pads the end with points from the start and the start with points from the end. "sampling" pads with points sampled from the input series
-#' @param from logical or integer, optional. Filter selecting the region from x to be used in the "sampling" method. Default: the last 1/15th points
+#' @param side numeric, whether to pad at the start (-1), at the end (1, default)
+#'  or at both extremes (0)
+#' @param method character, padding method. "zeroes" (default) pads with 0.
+#'  "circular" pads the end with points from the start and the start with points
+#'  from the end. "sampling" pads with points sampled from the input series
+#' @param from logical or integer, optional. Filter selecting the region from x
+#'  to be used in the "sampling" method. Default: the last 1/15th points
 #' @returns the padded series
 #' @export
-pad <- function(x, n, side = c(-1,0,1)[3], method=c("zeroes","circular","sampling")[1]
+pad <- function(x, n, side = c(-1,0,1)[3]
+                ,method=c("zeroes","circular","sampling")[1]
                 ,from=as.integer(length(x)*14/15):length(x)){
   if (!side %in% c(-1,0,1)){
     cat(crayon::red("nmr-spectra-processing::pad >>"

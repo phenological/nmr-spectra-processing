@@ -2,38 +2,73 @@
 % Please edit documentation in R/calibrateSpectra.R
 \name{calibrateSpectra}
 \alias{calibrateSpectra}
-\title{Spectra calibration
-Calibrates spectra by aligning a reference signal}
+\title{Spectra calibration}
 \usage{
-calibrateSpectra(x, Y, RoRef, matrix, ...)
+calibrateSpectra(
+  ppm,
+  Y,
+  ref = c("tsp", "glucose", "alanine", "NMRSignal1D see documentation")[1],
+  frequency = 600,
+  maxShift = 1/3,
+  threshold = 0.2,
+  rOref,
+  cshift,
+  j,
+  padding = c("zeroes", "circular", "sampling")[1],
+  from = as.integer(length(ppm) * 14/15):length(ppm),
+  ...
+)
 }
 \arguments{
-\item{x}{numeric, spectra scale e.g. ppm}
+\item{ppm}{numeric, spectra chemical shift scale}
 
 \item{Y}{matrix, intensities, spectra in rows}
 
-\item{RoRef}{numeric or logical, optional. Specification of the Region of
-Reference corresponding to the reference signal for calibration. It may be
-specified as a vector of x coordinates, as a length 2 vector declaring the
-limits of the region, or as logical filter for x. Either \code{RoRef} or \code{matrix}
-must be provided. If \code{RoRef} is not provided, the standard reference peak
-for the given \code{matrix} will be used as Region of Reference.}
+\item{ref}{character or \code{\linkS4class{NMRSignal1D}}, the reference signal
+for calibration. Either "glucose", "alanine", "tsp", or a
+\code{\linkS4class{NMRSignal1D}}}
 
-\item{matrix}{character, optional. The sample matrix; either 'urine', 'plasma' or
-'other'. Either \code{matrix} or \code{RoRef} must be specified.}
+\item{frequency}{numeric, the spectrometer frequency in MHz. Only used for
+character \code{ref}. Default: 600}
 
-\item{...}{additional arguments for \code{alignSeries} (see details)}
+\item{maxShift}{numeric, the maximum allowed shift as a fraction of the rOref,
+see \code{\link[stats]{ccf}}}
+
+\item{threshold}{numeric, minimum cross-correlation requiered for alignment.
+See \code{\link{alignSeries}}}
+
+\item{rOref}{numeric, optional. Limits of the Region of Reference within
+which the reference signal for calibration will be aligned. Use if the
+calibrated chemical shift is too far from the experimental signal, or if you
+need to avoid interfering signals.}
+
+\item{cshift, }{numeric, optional. Chemical shift of the reference. If
+provided, it replaces the internal model's chemical shift. Can be used to
+improve calibration to tsp, alanine and glucose, which may not be accurate due
+to large and systematic shifting in the experimental spectra.}
+
+\item{j}{numeric, optional. Coupling constant of the reference. If provided,
+it  replaces the internal model's coupling constant. Can be used to improve
+calibration to alanine and glucose, which may not be accurate due to
+fluctuations in the observed \emph{j}.}
+
+\item{padding}{character, the method to be used to fill the empty extremes of
+the shifted spectra. See \code{\link{pad}} for details. Default: "zeroes".}
+
+\item{from}{numeric, optional. Filter for the spectral region to be used for
+padding after the spectrum is shifted in the "sampling" method. See
+\code{\link{pad}} for details. Default: last 1/15th points}
+
+\item{...}{additional arguments for \code{\link{alignSeries}}, see \strong{Details}}
 }
 \value{
 calibrated spectra matrix
 }
 \description{
-Spectra calibration
-Calibrates spectra by aligning a reference signal
+Calibrates spectra
 }
 \details{
-crops the Region of Reference of the spectra matrix and passes it
-to \code{alignSeries}, which calculates the shifts that align the spectra on the
-Region of Reference. Then, it shifts the full spectra by the
-corresponding amounts.
+Interpolates the reference signal with \code{\link{signalToY}} to
+obtain a trace. Then, it aligns each row of the spectra matrix to this trace,
+within the \code{rOref},  using \code{\link{alignSeries}}.
 }

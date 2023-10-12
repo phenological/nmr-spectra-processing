@@ -4,12 +4,12 @@
 \name{nmr.spectra.processing-package}
 \alias{nmr.spectra.processing}
 \alias{nmr.spectra.processing-package}
-\title{nmr.spectra.processing: What the Package Does (One Line, Title Case)}
+\title{nmr.spectra.processing: Process Fourier-transformed NMR spectra}
 \description{
-What the package does (one paragraph).
+Collection of tools for post-processing Fourier-transformed NMR spectra: baseline correction, shifting, alignment, calibration to a reference resonance, peak integration. Combines with nmr.peak.fitting (upcoming release) to allow for integration of overlapped peaks. Also packs some utils to help navigate NMR data without leaving R.
 }
 \author{
-\strong{Maintainer}: First Last \email{first.last@example.com} (\href{https://orcid.org/YOUR-ORCID-ID}{ORCID})
+\strong{Maintainer}: Andrés Bernal \email{AndresFernando.BernalEscobar@murdoch.edu.au} (\href{https://orcid.org/0000-0003-1668-7225}{ORCID})
 
 }
 \keyword{internal}

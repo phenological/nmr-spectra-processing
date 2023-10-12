@@ -1,0 +1,13 @@
+test_that("alignSeries works", {
+  g1 <- gaussian(1:100,mean=30, max=1, fwhm=10)
+  g2 <- gaussian(1:100,mean=40, max=1, fwhm=15)
+  g3 <- gaussian(1:100,mean=50, max=1, fwhm=5)
+  m <- unname(rbind(g1, g2, g3))
+  expect_equal(alignSeries(g1,g2,shift=FALSE) ,10L)
+  alignToMedian <- alignSeries(m)
+  alignTo3 <- alignSeries(m, 3, lag.max=30)
+  expect_equal(dim(alignToMedian),c(3, 100))
+  expect_equal(dim(alignTo3),c(3, 100))
+  expect_equal(apply(alignToMedian,1,which.max),c(33L, 34L, 34L))
+  expect_equal(apply(alignTo3,1,which.max), rep(50L,3))
+})

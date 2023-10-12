@@ -9373,7 +9373,10 @@ function levenbergMarquardt(data, parameterizedFunction, options = {}) {
     let optimalParameters = parameters.slice();
     let converged = error <= errorTolerance;
     let iteration = 0;
+//    let diagnostic = [];
     for (; iteration < maxIterations && !converged; iteration++) {
+	//console.log("iteration " + iteration + " error " + error + " params " + parameters);
+//	diagnostic.push({err:error,params:parameters})
         let previousError = error;
         let { perturbations, jacobianWeightResidualError } = (0, step_1.default)(data, parameters, damping, gradientDifference, parameterizedFunction, centralDifference, weightSquare);
         for (let k = 0; k < parameters.length; k++) {
@@ -9406,6 +9409,7 @@ function levenbergMarquardt(data, parameterizedFunction, options = {}) {
         parameterValues: optimalParameters,
         parameterError: optimalError,
         iterations: iteration,
+//	diagnostics: diagnostic
     };
 }
 exports.levenbergMarquardt = levenbergMarquardt;
@@ -16747,7 +16751,7 @@ function selectMethod(optimizationOptions = {}) {
                 algorithm: ml_levenberg_marquardt_1.levenbergMarquardt,
                 optimizationOptions: {
                     damping: 1.5,
-                    maxIterations: 100,
+                    maxIterations: 20,
                     errorTolerance: 1e-8,
                     ...options,
                 },
@@ -61166,6 +61170,7 @@ function optimizeSignals(data, signals, options) {
             shape: { ...newPeaks[0].shape },
             intensity,
             peaks: newPeaks,
+//	    optimization: fitted
         });
     }
     return newSignals;
