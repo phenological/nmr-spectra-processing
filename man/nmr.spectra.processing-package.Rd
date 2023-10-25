@@ -6,7 +6,7 @@
 \alias{nmr.spectra.processing-package}
 \title{nmr.spectra.processing: Process Fourier-transformed NMR spectra}
 \description{
-Collection of tools for post-processing Fourier-transformed NMR spectra: baseline correction, shifting, alignment, calibration to a reference resonance, peak integration. Combines with nmr.peak.fitting (upcoming release) to allow for integration of overlapped peaks. Also packs some utils to help navigate NMR data without leaving R.
+Collection of tools for processing Fourier-transformed NMR spectra: baseline correction, shifting, alignment, calibration to a reference resonance, peak integration and more. Also packs some utils to help navigate NMR data without leaving R.
 }
 \author{
 \strong{Maintainer}: Andrés Bernal \email{AndresFernando.BernalEscobar@murdoch.edu.au} (\href{https://orcid.org/0000-0003-1668-7225}{ORCID})

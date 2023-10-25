@@ -14,7 +14,8 @@ smatplot(
   reverse = TRUE,
   legend,
   label,
-  palette = "Set1",
+  palette = c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33",
+    "#A65628", "#F781BF", "#999999"),
   ...
 )
 }
@@ -40,7 +41,8 @@ increases from right to left as it's customary in NMR spectroscopy}
 
 \item{label, }{character, optional, series labels}
 
-\item{palette}{\code{\link[RColorBrewer]{RColorBrewer}} palette Default: "Set1"}
+\item{palette}{vector of colors, equivalent to matplot(col). The default is
+Set1 copied from RColorBrewer}
 
 \item{..., }{additional arguments to be passed to \code{\link[graphics]{matplot}}}
 }

@@ -82,22 +82,20 @@ top <- function(ppm,Y,cshift,n=10L,roi=c(-Inf,Inf),bottom=FALSE,index=FALSE){
 #' @param legend, optional, position of the legend as specified in
 #' \code{\link[graphics]{legend}}
 #' @param label, character, optional, series labels
-#' @param palette \code{\link[RColorBrewer]{RColorBrewer}} palette Default: "Set1"
+#' @param palette vector of colors, equivalent to matplot(col). The default is
+#' Set1 copied from RColorBrewer
 #' @param ..., additional arguments to be passed to \code{\link[graphics]{matplot}}
 #' @returns NULL
-#' @import RColorBrewer
 #' @importFrom graphics matplot
 #' @export
 smatplot <- function(ppm, y, by, roi, type="l",lty=1
-                     ,reverse=TRUE,legend,label,palette="Set1",...){
+                     ,reverse=TRUE,legend,label
+                     ,palette=c("#E41A1C","#377EB8","#4DAF4A","#984EA3","#FF7F00"
+                                ,"#FFFF33","#A65628","#F781BF","#999999"),...){
   if (is.matrix(y))
     y <- t(y)
   else
     y <- as.matrix(y)
-  
-  #make color palette
-  n <- RColorBrewer::brewer.pal.info[palette,"maxcolors"]
-  colores <- RColorBrewer::brewer.pal(n=n,name=palette)
   
   if (!missing(roi)){
     fi <- ppm >= roi[1] & ppm <= roi[2]
@@ -112,13 +110,13 @@ smatplot <- function(ppm, y, by, roi, type="l",lty=1
   }
   
   if (missing(by)){
-    matplot(ppm,y,type=type,lty=lty,xlim=roi,col=colores,...)
+    matplot(ppm,y,type=type,lty=lty,xlim=roi,col=palette,...)
     if (!missing(legend)){
       if (missing(label))
-        legend(legend,legend=1:dim(y)[2],text.col=colores)
+        legend(legend,legend=1:dim(y)[2],text.col=palette)
       else
         legend(legend,legend=label[1:dim(y)[2]]
-               ,text.col=colores)
+               ,text.col=palette)
     }
     
   } 
@@ -127,23 +125,23 @@ smatplot <- function(ppm, y, by, roi, type="l",lty=1
     r <- dim(y)[2] %% by
     for (j in 1:n){
       soi <- 1:by + by*(j-1)
-      matplot(ppm,y[,soi,drop=FALSE],type=type,lty=lty,col=colores,xlim=roi,...)
+      matplot(ppm,y[,soi,drop=FALSE],type=type,lty=lty,col=palette,xlim=roi,...)
       if (!missing(legend)){
         if (missing(label))
-          legend(legend,legend=soi,text.col=colores)
+          legend(legend,legend=soi,text.col=palette)
         else
           legend(legend,legend=label[soi]
-                 ,text.col=colores)
+                 ,text.col=palette)
       }
     } 
     if (r>0){
       soi <- (by*n+1):(by*n+r)
-      matplot(ppm,y[,soi,drop=FALSE],type=type,lty=lty,col=colores,xlim=roi,...)
+      matplot(ppm,y[,soi,drop=FALSE],type=type,lty=lty,col=palette,xlim=roi,...)
       if (!missing(legend)){
         if (missing(label))
-          legend(legend,legend=soi,text.col=colores)
+          legend(legend,legend=soi,text.col=palette)
         else
-          legend(legend,legend=label[soi],text.col=colores)
+          legend(legend,legend=label[soi],text.col=palette)
       }
     } 
   }
