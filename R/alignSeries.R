@@ -36,8 +36,8 @@ alignSeries <- function(x, ref=c("median","mean","more options in documentation"
                         ,padding=c("zeroes","circular","sampling")[1]
                         ,from = as.integer(length(x)*14/15):length(x), ...){
   alignSeries.numeric <- function(x, ref, threshold, shift,padding,from, ...){
-    if(!("plot" %in% names(list(...)))) plot <- FALSE
-    cc <- ccf(x, ref, type="correlation", plot=plot, ...)
+    # if(!("plot" %in% names(list(...))))
+    cc <- ccf(x, ref, type="correlation", plot=FALSE, ...)
     ccmax <- which.max(cc$acf)
     if (length(ccmax)==0){
       cat(crayon::yellow("nmr.spectra.processing::alignSeries >>"

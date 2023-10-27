@@ -24,7 +24,7 @@
 calibrateSignal <- function(ppm,y,signal
                             , maxShift=1/3,threshold=0.2
                             ,rOref=signalDomain(signal,30), ...){
-  aShift <- calibrateToSignal(ppm,y,signal,rOref, maxShift=1/3
+  aShift <- calibrateToSignal(ppm,y,signal,rOref, maxShift=maxShift
                               ,threshold=0.2,...)
   aShift <- aShift * (ppm[2] - ppm[1])
   for (i in 1:length(signal@peaks)){
@@ -148,7 +148,7 @@ calibrateSpectra <- function(ppm, Y,ref=c("tsp","glucose","alanine"
   }
   
   #Align normalized spectra on rOref to reference and get shifts
-  shifts <- calibrateToSignal(ppm,Y,ref,rOref, maxShift=1/3
+  shifts <- calibrateToSignal(ppm,Y,ref,rOref, maxShift=maxShift
                               ,threshold=0.2,...)
   
   #Shift whole spectra by the corresponding shifts
