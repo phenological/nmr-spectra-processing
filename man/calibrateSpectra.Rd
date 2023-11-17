@@ -26,7 +26,9 @@ calibrateSpectra(
 
 \item{ref}{character or \code{\linkS4class{NMRSignal1D}}, the reference signal
 for calibration. Either "glucose", "alanine", "tsp", or a
-\code{\linkS4class{NMRSignal1D}}}
+\code{\linkS4class{NMRSignal1D}}. "tsp" calibrates to a singlet at 0 ppm. "alanine"
+calibrates to a doublet at 1.48 ppm with j=7.26. "glucose" aligns to a doublet
+at 5.223 with j=3.63.}
 
 \item{frequency}{numeric, the spectrometer frequency in MHz. Only used for
 character \code{ref}. Default: 600}
@@ -39,16 +41,15 @@ See \code{\link{alignSeries}}}
 
 \item{rOref}{numeric, optional. Limits of the Region of Reference within
 which the reference signal for calibration will be aligned. Use if the
-calibrated chemical shift is too far from the experimental signal, or if you
-need to avoid interfering signals.}
+calibration signal is very shifted, or if you need to avoid interfering signals.
+Otherwise, the default should be fine.}
 
 \item{cshift, }{numeric, optional. Chemical shift of the reference. If
-provided, it replaces the internal model's chemical shift. Can be used to
-improve calibration to tsp, alanine and glucose, which may not be accurate due
-to large and systematic shifting in the experimental spectra.}
+provided, it replaces the internal model's chemical shift. Use if you want
+to position your signal differently from the standard model (see \code{ref})}
 
 \item{j}{numeric, optional. Coupling constant of the reference. If provided,
-it  replaces the internal model's coupling constant. Can be used to improve
+it  replaces the internal model's coupling constant. Use it to fine tune
 calibration to alanine and glucose, which may not be accurate due to
 fluctuations in the observed \emph{j}.}
 
@@ -70,5 +71,11 @@ Calibrates spectra
 \details{
 Interpolates the reference signal with \code{\link{signalToY}} to
 obtain a trace. Then, it aligns each row of the spectra matrix to this trace,
-within the \code{rOref},  using \code{\link{alignSeries}}.
+within the \code{rOref},  using \code{\link{alignSeries}}. Passing a NMRSignal1D
+to \code{ref} allows to calibrate to any custom signal; but if you are aligning
+to a custom doublet or singlet, it's more practical to set \code{ref} to either
+"tsp" (for singlets) or "alanine" (for doublets) and adjust the signal parameters
+through the arguments \code{cshift} and \code{j}. This way \code{calibrateSpectra}
+handles the annoying task of translating the signal parameters into a NMRSignal1D
+object.
 }

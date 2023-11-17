@@ -8,7 +8,7 @@ shiftSeries(
   x,
   shift,
   padding = "sampling",
-  from = as.integer(length(x) * 14/15):length(from)
+  from = as.integer(length(x) * 14/15):length(x)
 )
 }
 \arguments{

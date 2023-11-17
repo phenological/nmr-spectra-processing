@@ -9,7 +9,7 @@
 #' @returns numeric, the shifted series
 #' @export
 shiftSeries <- function(x,shift,padding="sampling"
-                        ,from=as.integer(length(x)*14/15):length(from)
+                        ,from=as.integer(length(x)*14/15):length(x)
                         ){
   direction <- sign(shift)
   shift <- abs(shift)
