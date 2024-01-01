@@ -11,6 +11,13 @@
 shiftSeries <- function(x,shift,padding="sampling"
                         ,from=as.integer(length(x)*14/15):length(x)
                         ){
+  if (!is.numeric(x)){
+    cat(crayon::yellow("nmr-spectra-processing::pad >>"
+                       ,"Argument x being cast as.numeric\n"
+                       ,"Unpredictable results will follow if casting to"
+                       ,"numeric vector fails\n"))
+    x <- as.numeric(x)
+  }
   direction <- sign(shift)
   shift <- abs(shift)
   padded <- pad(x,shift,-direction,method=padding,from=from)

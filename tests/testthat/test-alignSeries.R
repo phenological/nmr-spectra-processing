@@ -10,4 +10,7 @@ test_that("alignSeries works", {
   expect_equal(dim(alignTo3),c(3, 100))
   expect_equal(apply(alignToMedian,1,which.max),c(33L, 34L, 34L))
   expect_equal(apply(alignTo3,1,which.max), rep(50L,3))
+  expect_error(alignSeries(m,"a"))
+  expect_error(alignSeries("a",2))
+  expect_error(alignSeries(m,5))
 })

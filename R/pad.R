@@ -14,10 +14,17 @@
 pad <- function(x, n, side = c(-1,0,1)[3]
                 ,method=c("zeroes","circular","sampling")[1]
                 ,from=as.integer(length(x)*14/15):length(x)){
+  if (!is.numeric(x)){
+    cat(crayon::yellow("nmr-spectra-processing::pad >>"
+                    ,"Argument x being cast as.numeric\n"
+                    ,"Unpredictable results will follow if casting to"
+                    ,"numeric vector fails\n"))
+    x <- as.numeric(x)
+  }
   if (!side %in% c(-1,0,1)){
     cat(crayon::red("nmr-spectra-processing::pad >>"
                     ,"wrong side specification: use -1 for left,"
-                    ,"1 for right, and 0 for both"))
+                    ,"1 for right, and 0 for both\n"))
     stop()
   }
   n <- as.integer(n[1])

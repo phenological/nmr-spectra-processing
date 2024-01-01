@@ -27,5 +27,9 @@ test_that("calibration works", {
                  ,c(1L,1L))
     
     expect_no_condition(calibrateSpectra(ppm,avo3[1,]))
+    expect_equal(calibrateSpectra(as.character(ppm),avo3,"alanine",frequency=400)
+                 ,avo3CalAla)
+    expect_equal(calibrateSpectra(ppm,as.character(avo3[1,]),"alanine",frequency=400)
+    ,avo3CalAla[1,])
 })
 

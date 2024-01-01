@@ -54,6 +54,25 @@ getI <- function(ppm,v){
 #'   matrix with the corresponding spectra.
 #' @export
 top <- function(ppm,Y,cshift,n=10L,roi=c(-Inf,Inf),bottom=FALSE,index=FALSE){
+  if (!is.numeric(ppm)){
+    cat(crayon::yellow("nmr-spectra-processing::pad >>"
+                       ,"Argument ppm being cast as.numeric\n"
+                       ,"Unpredictable results may follow if casting to"
+                       ,"numeric vector fails\n"))
+    ppm <- as.numeric(ppm)
+  }
+  if (!is.matrix(Y)){
+    cat(crayon::yellow("nmr-spectra-processing::pad >>"
+                       ,"Argument Y being cast as.matrix\n"
+                       ,"Unpredictable results may follow if casting to"
+                       ,"numeric matrix fails\n"))
+    Y <- as.matrix(Y)
+  }
+  if (!is.numeric(Y)){
+      cat(crayon::red("nmr-spectra-processing::pad >>"
+                         ,"Expected Y to be a numeric matrix\n"))
+      stop()
+  }
   n <- min(n,dim(Y)[1])
   if (missing(cshift)){
     fi <- crop(ppm,roi=roi)
@@ -92,10 +111,7 @@ smatplot <- function(ppm, y, by, roi, type="l",lty=1
                      ,reverse=TRUE,legend,label
                      ,palette=c("#E41A1C","#377EB8","#4DAF4A","#984EA3","#FF7F00"
                                 ,"#FFFF33","#A65628","#F781BF","#999999"),...){
-  if (is.matrix(y))
-    y <- t(y)
-  else
-    y <- as.matrix(y)
+  if (is.matrix(y)) y <- t(y) else y <- as.matrix(y)
   
   if (!missing(roi)){
     fi <- ppm >= roi[1] & ppm <= roi[2]

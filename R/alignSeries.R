@@ -61,13 +61,42 @@ alignSeries <- function(x, ref=c("median","mean","more options in documentation"
   }
   
   if (is.vector(x)){
-    if (!is.numeric(ref) | length(ref) != length(x)){
+    if(!is.numeric(x)){
+      cat(crayon::yellow("nmr.spectra.processing:alignSeries >>"
+                         ,"Non-numeric argument x being cast as.numeric\n"
+                         ,"Unpredictable results will follow if casting to"
+                         ,"numeric vector fails\n"))
+      x <- as.numeric(x)
+    }
+    if (!is.numeric(ref)){
+      cat(crayon::yellow("nmr.spectra.processing:alignSeries >>"
+                         ,"Exoected numeric reference\n"
+                         ,"Non-numeric argument ref being cast as.numeric\n"
+                         ,"Unpredictable results may follow if casting to"
+                         ,"numeric vector fails\n"))
+      ref <- as.numeric(ref)
+    }
+    if (length(ref) != length(x)){
       cat(crayon::red("nmr.spectra.processing::alingSeries >>"
                       ,"expected a numeric reference of the same length"
                       ,"as the input series\n"))
       stop()
     }
     return(alignSeries.numeric(x,ref,threshold,shift,padding,from,...))
+  }
+  
+  #Parse input as matrix
+  if (!is.matrix(x)){
+    cat(crayon::yellow("nmr.spectra.processing:alignSeries >>"
+                       ,"Argument x being cast as.matrix\n"
+                       ,"Unpredictable results may follow if casting to"
+                       ,"numeric matrix fails\n"))
+    x <- as.matrix(x)
+  }
+  if (!is.numeric(x)){
+    cat(crayon::red("nmr.spectra.processing::alingSeries >>"
+                    ,"expected x to be a numeric vector or matrix \n"))
+    stop()
   }
   
   #Parse ref and build reference spectrum
@@ -80,8 +109,8 @@ alignSeries <- function(x, ref=c("median","mean","more options in documentation"
       if (ref=="mean") ref <- apply(x,2,mean)
       else {
         cat(crayon::red("nmrSpectraProcessing::alignSeries >>"
-                        ,"Invalid character ref: must be 'median' (default)"
-                        ,"or 'mean'\n"))
+                        ,"Invalid character ref: must be 'median' (default),"
+                        ,"'mean', or a function.\n"))
         stop()
       }
     }

@@ -59,7 +59,7 @@ calibrateSignal <- function(ppm,y,signal
 #'  fluctuations in the observed \emph{j}.
 #' @param maxShift numeric, the maximum allowed shift as a fraction of the rOref,
 #'  see \code{\link[stats]{ccf}}
-#' @param threshold numeric, minimum cross-correlation requiered for alignment.
+#' @param threshold numeric, minimum cross-correlation required for alignment.
 #'  See \code{\link{alignSeries}}
 #' @param padding character, the method to be used to fill the empty extremes of
 #'  the shifted spectra. See \code{\link{pad}} for details. Default: "zeroes".
@@ -89,7 +89,30 @@ calibrateSpectra <- function(ppm, Y,ref=c("tsp","glucose","alanine"
                              ,from=as.integer(length(ppm)*14/15):length(ppm)
                              , ...){
   
-  # if (missing(j)) j <- NULL else j <- j/2
+  #Type check and casting
+  if (!is.numeric(ppm)){
+    cat(crayon::yellow("nmr.spectra.processing::calibrateSpectra >>"
+                       ,"Non-numeric argument ppm being cast as.numeric\n"
+                       ,"Unpredictable results will follow if casting to"
+                       ,"numeric vector fails\n"))
+    ppm <- as.numeric(ppm)
+  }
+  if (!is.numeric(Y)){
+    cat(crayon::yellow("nmr.spectra.processing::calibrateSpectra >>"
+                       ,"Non-numeric argument Y"))
+    if (is.null(dim(Y))){
+      cat(crayon::yellow(" begin cast as.numeric\n"
+                         ,"Unpredictable results will follow if casting to"
+                         ,"numeric vector fails"))
+      Y <- as.numeric(Y)
+    }
+    else{
+      cat(crayon::yellow(" being cast as.matrix\n"
+                         ,"Unpredictable results will follow if casting to"
+                         ,"numeric matrix fails\n"))
+      Y <- as.matrix(Y)
+    }
+  }
   
   make.ref <- function(ref, frequency, j, cshift){
     if (ref == "tsp"){
@@ -100,7 +123,7 @@ calibrateSpectra <- function(ppm, Y,ref=c("tsp","glucose","alanine"
                  ,shape=list(name = "pseudoVoigt"
                              ,params=list(mu=.85,fwhm=0.0001,base=0))
                  ,peaks = list(
-                   new("NMRPeak1D", x=0, y=1)
+                   new("NMRPeak1D", x=cshift, y=1)
                  )
       ))
     }
