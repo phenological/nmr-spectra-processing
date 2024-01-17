@@ -88,7 +88,7 @@ calibrateSpectra <- function(ppm, Y,ref=c("tsp","glucose","alanine"
                              ,padding=c("zeroes","circular","sampling")[1]
                              ,from=as.integer(length(ppm)*14/15):length(ppm)
                              , ...){
-  
+  rowLabels <- rownames(Y)
   #Type check and casting
   if (!is.numeric(ppm)){
     cat(crayon::yellow("nmr.spectra.processing::calibrateSpectra >>"
@@ -183,11 +183,13 @@ calibrateSpectra <- function(ppm, Y,ref=c("tsp","glucose","alanine"
   
   #Shift whole spectra by the corresponding shifts
   if (is.matrix(Y)){
-    t(sapply(1:dim(Y)[1],function(i){
+    Y <- t(sapply(1:dim(Y)[1],function(i){
       shift <- shifts[i]
       y <- Y[i,]
       shiftSeries(y,shift, padding=padding, from=from)
     }))
+    rownames(Y) <- rowLabels
+    return(Y)
   } else{
     shiftSeries(Y,shifts,padding=padding,from=from)
   }
