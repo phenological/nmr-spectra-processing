@@ -51,8 +51,9 @@ alignSeries <- function(x, ref=c("median","mean","more options in documentation"
       delta <- as.vector(cc$lag)[ccmax]
       if (cc$acf[ccmax] < threshold){
         cat(crayon::yellow("nmr.spectra.processing::alginSeries >>"
-                           ,"Cross-correlation lower than threshold"
-                           ,"Series left unshifted.\n"))
+                           ,"Cross-correlation", cc$acf[ccmax]
+                           ,"lower than threshold", threshold
+                           ,".\nSeries left unshifted.\n"))
         delta = 0
       }
     }
