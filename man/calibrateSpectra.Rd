@@ -36,7 +36,7 @@ character \code{ref}. Default: 600}
 \item{maxShift}{numeric, the maximum allowed shift as a fraction of the rOref,
 see \code{\link[stats]{ccf}}}
 
-\item{threshold}{numeric, minimum cross-correlation requiered for alignment.
+\item{threshold}{numeric, minimum cross-correlation required for alignment.
 See \code{\link{alignSeries}}}
 
 \item{rOref}{numeric, optional. Limits of the Region of Reference within

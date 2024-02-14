@@ -174,7 +174,7 @@ calibrateSpectra <- function(ppm, Y,ref=c("tsp","glucose","alanine"
   if (missing(rOref)){
     if (ref@id == "TSPbration"){
       rOref <- c(-0.02,0.02)
-    } else rOref <- signalDomain(ref)
+    } else rOref <- signalDomain(ref,30)
   }
   
   #Align normalized spectra on rOref to reference and get shifts
@@ -202,12 +202,16 @@ calibrateToSignal <- function(ppm, Y, signal, rOref=signalDomain(signal,30)
                               , maxShift=1/3,threshold=0.2, ...){
   rOref <- crop(ppm,roi=rOref)
   ppm <- ppm[rOref]
+  #bcorr annoyting broad features
   #Align normalized spectra on rOref to reference and get shifts
   if (is.matrix(Y)){
-    normS <- t(apply(Y[,rOref],1,function(y) y / max(y)))
+    Y <- Y[,rOref]
+    Y <- baselineCorrection(Y,lambda=1e3)
+    normS <- t(apply(Y,1,function(y) y / max(y)))
   } else{
-    normS <- Y[rOref]
-    normS <- normS / max(normS)
+    Y <- Y[rOref]
+    Y <-  baselineCorrection(Y,lambda=1e3)
+    normS <- Y / max(Y)
   }
   alignSeries(normS, signalToY(normalizeSignal(signal),ppm),shift=FALSE
               ,lag.max=length(ppm) * maxShift, threshold=threshold, ...)
