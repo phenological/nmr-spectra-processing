@@ -40,10 +40,11 @@ calibrateSignal <- function(ppm,y,signal
 #' @param ppm numeric, spectra chemical shift scale
 #' @param Y matrix, intensities, spectra in rows
 #' @param ref character or \code{\linkS4class{NMRSignal1D}}, the reference signal 
-#' for calibration. Either "glucose", "alanine", "tsp", or a
+#' for calibration. Either "glucose", "alanine", "tsp", "serum", or a
 #' \code{\linkS4class{NMRSignal1D}}. "tsp" calibrates to a singlet at 0 ppm. "alanine"
 #' calibrates to a doublet at 1.48 ppm with j=7.26. "glucose" aligns to a doublet
-#' at 5.223 with j=3.63.
+#' at 5.223 with j=3.63. "serum" aligns to the glucose double with a (typically)
+#' extended range of shifting.
 #' @param frequency numeric, the spectrometer frequency in MHz. Only used for
 #' character \code{ref}. Default: 600
 #' @param rOref numeric, optional. Limits of the Region of Reference within
@@ -81,7 +82,7 @@ calibrateSignal <- function(ppm,y,signal
 #' @importClassesFrom fusion NMRPeak1D
 #' @importClassesFrom fusion NMRSignal1D
 #' @export
-calibrateSpectra <- function(ppm, Y,ref=c("tsp","glucose","alanine"
+calibrateSpectra <- function(ppm, Y,ref=c("tsp","glucose","alanine","serum"
                                         ,"NMRSignal1D see documentation")[1]
                              ,frequency=600, maxShift=1/3,threshold=0.2
                              ,rOref, cshift, j
@@ -142,7 +143,7 @@ calibrateSpectra <- function(ppm, Y,ref=c("tsp","glucose","alanine"
                  )
       ))
     }
-    if (ref == "glucose"){
+    if (ref %in% c("glucose","serum")){
      if (missing(j)) j <- 3.63
      j <- j / (2 * frequency)
      if(missing(cshift)) cshift <- 5.223
@@ -162,20 +163,31 @@ calibrateSpectra <- function(ppm, Y,ref=c("tsp","glucose","alanine"
     stop()
   }
   
+  if(missing(rOref)) rOref <- NULL
+  
+  #Assign tailored rOref if necessary
+  if (is.null(rOref)){
+    if (ref == "tsp"){
+      rOref <- c(-0.02,0.02)
+    }  else{
+      if (ref == "serum"){
+        rOref <- c(5.2,5.4)
+      }
+    }
+  }
+  
   #create ref if needed
-  if (is.character(ref)) ref <- make.ref(ref, frequency, j, cshift)
+  if (is.character(ref)){
+    ref <- make.ref(ref, frequency, j, cshift)
+  } 
   if (!("NMRSignal1D" %in% is(ref))){
     cat(crayon::red("nmr.spectra.processing::calibrateSpectra >>"
                     ,"invalid reference\n"))
     stop()
   }
   
-  #compute rOref if needed (tsp is handled differently because it's modeled as a "line")
-  if (missing(rOref)){
-    if (ref@id == "TSPbration"){
-      rOref <- c(-0.02,0.02)
-    } else rOref <- signalDomain(ref,30)
-  }
+  #Compute default rOref if necessary
+  if(is.null(rOref)) rOref <- signalDomain(ref,30)
   
   #Align normalized spectra on rOref to reference and get shifts
   shifts <- calibrateToSignal(ppm,Y,ref,rOref, maxShift=maxShift

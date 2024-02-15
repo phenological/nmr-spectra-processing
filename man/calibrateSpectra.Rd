@@ -7,7 +7,7 @@
 calibrateSpectra(
   ppm,
   Y,
-  ref = c("tsp", "glucose", "alanine", "NMRSignal1D see documentation")[1],
+  ref = c("tsp", "glucose", "alanine", "serum", "NMRSignal1D see documentation")[1],
   frequency = 600,
   maxShift = 1/3,
   threshold = 0.2,
@@ -25,10 +25,11 @@ calibrateSpectra(
 \item{Y}{matrix, intensities, spectra in rows}
 
 \item{ref}{character or \code{\linkS4class{NMRSignal1D}}, the reference signal
-for calibration. Either "glucose", "alanine", "tsp", or a
+for calibration. Either "glucose", "alanine", "tsp", "serum", or a
 \code{\linkS4class{NMRSignal1D}}. "tsp" calibrates to a singlet at 0 ppm. "alanine"
 calibrates to a doublet at 1.48 ppm with j=7.26. "glucose" aligns to a doublet
-at 5.223 with j=3.63.}
+at 5.223 with j=3.63. "serum" aligns to the glucose double with a (typically)
+extended range of shifting.}
 
 \item{frequency}{numeric, the spectrometer frequency in MHz. Only used for
 character \code{ref}. Default: 600}
