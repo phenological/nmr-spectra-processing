@@ -131,11 +131,10 @@ smatplot <- function(ppm, y, roi, by, type="l",lty=1,legend,label
   if (!missing(roi)){
     fi <- ppm >= roi[1] & ppm <= roi[2]
     ppm <- ppm[fi]
-    y <- y[fi,]
+    y <- y[fi,,drop=FALSE]
   }
   else{
     roi <- range(ppm)
-    fi <- TRUE
   }
   #Adjust resolution
   if (resolution=="dev"){
@@ -145,7 +144,7 @@ smatplot <- function(ppm, y, roi, by, type="l",lty=1,legend,label
       pointsPerPixel <- pointz %/% pixels
       fi <- 1:pointz %% pointsPerPixel == 0
       ppm <- ppm[fi]
-      y <- y[fi,]
+      y <- y[fi,,drop=FALSE]
     }
   }
   #Reverse scale
