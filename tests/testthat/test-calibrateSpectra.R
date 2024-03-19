@@ -31,5 +31,7 @@ test_that("calibration works", {
                  ,avo3CalAla)
     expect_equal(calibrateSpectra(ppm,as.character(avo3[1,]),"alanine",frequency=400)
     ,avo3CalAla[1,])
+    expect_type(calibrateSpectra(ppm,avo3,"alanine",shift=FALSE)
+                ,"integer")
 })
 

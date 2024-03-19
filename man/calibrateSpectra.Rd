@@ -17,6 +17,7 @@ calibrateSpectra(
   padding = c("zeroes", "circular", "sampling")[1],
   from = as.integer(length(ppm) * 14/15):length(ppm),
   lambda = 1000,
+  shift = TRUE,
   ...
 )
 }
@@ -65,6 +66,9 @@ padding after the spectrum is shifted in the "sampling" method. See
 \item{lambda}{numeric. You should not need to tamper with this parameter
 unless you are attempting something extraordinary. See \code{\link{calibrateSignal}}
 for details}
+
+\item{shift}{logical, whether to return the calibrated spectra (TRUE, default)
+or to return the calibrating shifts}
 
 \item{...}{additional arguments for \code{\link{alignSeries}}, see \strong{Details}}
 }

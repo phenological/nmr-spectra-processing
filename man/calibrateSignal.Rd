@@ -12,6 +12,7 @@ calibrateSignal(
   threshold = 0.2,
   rOref = signalDomain(signal, 30),
   lambda = 1000,
+  shift = TRUE,
   ...
 )
 }
@@ -32,10 +33,13 @@ See \code{\link{alignSeries}}.}
 which the reference signal will be calibrated. The default encompasses a
 region 30 linewidths around the external peaks.}
 
-\item{lambda, }{numeric. Parameter to \code{\link[ptw]{asysm}}. \code{calibrateSignal} uses
+\item{lambda}{numeric. Parameter to \code{\link[ptw]{asysm}}. \code{calibrateSignal} uses
 \code{\link{baselineCorrection}} with an unusually small \code{lambda} to
 flatten broad peaks that interfere with signal alignment. The default
 \code{lambda=1e3} works well in typical cases.}
+
+\item{shift}{logical, whether to return the calibrated signal (TRUE, default)
+or to return the calibrating shift}
 
 \item{...}{additional arguments for \code{\link{alignSeries}}.}
 }

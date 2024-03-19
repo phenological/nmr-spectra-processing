@@ -26,11 +26,11 @@ crop <- function(ppm,start=-Inf,end=Inf,roi){
 #' Quality of life function to save you a few key strokes and some neural pulses.
 #' Questionable value.
 #' @param ppm, numeric, chemical shift scale
-#' @param v, numeric, chemical shift value
+#' @param ..., numeric, chemical shift values to be found
 #' @returns integer, the index of the element of ppm that is closest to v
 #' @export
-getI <- function(ppm,v){
-  which.min(abs(ppm-v))
+getI <- function(ppm,...){
+  sapply(c(...),function(v) which.min(abs(ppm-v)))
 }
 
 #' Get the \emph{n} spectra with the highest intensity on the given chemical shift

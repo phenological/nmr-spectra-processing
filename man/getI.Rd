@@ -4,12 +4,12 @@
 \alias{getI}
 \title{Get the index of a chemical shift}
 \usage{
-getI(ppm, v)
+getI(ppm, ...)
 }
 \arguments{
 \item{ppm, }{numeric, chemical shift scale}
 
-\item{v, }{numeric, chemical shift value}
+\item{..., }{numeric, chemical shift values to be found}
 }
 \value{
 integer, the index of the element of ppm that is closest to v

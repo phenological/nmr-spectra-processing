@@ -11,10 +11,12 @@
 #'  see \code{\link[stats]{ccf}}.
 #' @param threshold numeric, minimum cross-correlation required for alignment.
 #'  See \code{\link{alignSeries}}.
-#' @param lambda, numeric. Parameter to \code{\link[ptw]{asysm}}. \code{calibrateSignal} uses
-#'\code{\link{baselineCorrection}} with an unusually small \code{lambda} to
+#' @param lambda numeric. Parameter to \code{\link[ptw]{asysm}}. \code{calibrateSignal} uses
+#' \code{\link{baselineCorrection}} with an unusually small \code{lambda} to
 #' flatten broad peaks that interfere with signal alignment. The default
-#'  \code{lambda=1e3} works well in typical cases.
+#' \code{lambda=1e3} works well in typical cases.
+#' @param shift logical, whether to return the calibrated signal (TRUE, default) 
+#' or to return the calibrating shift
 #' @param ... additional arguments for \code{\link{alignSeries}}.
 #' @details Interpolates the signal with \code{\link{signalToY}} and aligns the
 #' resulting trace to the spectrum in the rOref using \code{\link{alignSeries}}.
@@ -28,15 +30,18 @@
 calibrateSignal <- function(ppm,y,signal
                             , maxShift=1/3,threshold=0.2
                             ,rOref=signalDomain(signal,30)
-                            ,lambda=1e3, ...){
+                            ,lambda=1e3, shift=TRUE,...){
   aShift <- calibrateToSignal(ppm,y,signal,rOref, maxShift=maxShift
                               ,threshold,lambda=lambda,...)
   aShift <- aShift * (ppm[2] - ppm[1])
-  for (i in 1:length(signal@peaks)){
-    signal@peaks[[i]]@x <- signal@peaks[[i]]@x - aShift
+  if (shift){
+    for (i in 1:length(signal@peaks)){
+      signal@peaks[[i]]@x <- signal@peaks[[i]]@x - aShift
+    }
+    signal@chemicalShift <- signal@chemicalShift - aShift
+    return(signal)
   }
-  signal@chemicalShift <- signal@chemicalShift - aShift
-  return(signal)
+  return(aShift)
 }
 
 #' Spectra calibration
@@ -75,6 +80,8 @@ calibrateSignal <- function(ppm,y,signal
 #' @param lambda numeric. You should not need to tamper with this parameter
 #' unless you are attempting something extraordinary. See \code{\link{calibrateSignal}}
 #' for details
+#' @param shift logical, whether to return the calibrated spectra (TRUE, default)
+#' or to return the calibrating shifts
 #' @param ... additional arguments for \code{\link{alignSeries}}, see \strong{Details}
 #' @details Interpolates the reference signal with \code{\link{signalToY}} to 
 #' obtain a trace. Then, it aligns each row of the spectra matrix to this trace,
@@ -96,7 +103,7 @@ calibrateSpectra <- function(ppm, Y,ref=c("tsp","glucose","alanine","serum"
                              ,rOref, cshift, j
                              ,padding=c("zeroes","circular","sampling")[1]
                              ,from=as.integer(length(ppm)*14/15):length(ppm)
-                             ,lambda=1e3 , ...){
+                             ,lambda=1e3 , shift=TRUE,...){
   rowLabels <- rownames(Y)
   #Type check and casting
   if (!is.numeric(ppm)){
@@ -173,21 +180,20 @@ calibrateSpectra <- function(ppm, Y,ref=c("tsp","glucose","alanine","serum"
   
   if(missing(rOref)) rOref <- NULL
   
-  #Assign tailored rOref if necessary
-  if (is.null(rOref)){
-    if (ref == "tsp"){
-      rOref <- c(-0.02,0.02)
-    }  else{
-      if (ref == "serum"){
-        rOref <- c(5.2,5.4)
+  #create ref from character reference
+  if (is.character(ref)){
+    #Assign tailored rOref if necessary
+    if (is.null(rOref)){
+      if (ref == "tsp"){
+        rOref <- c(-0.02,0.02)
+      }  else{
+        if (ref == "serum"){
+          rOref <- c(5.2,5.4)
+        }
       }
     }
-  }
-  
-  #create ref if needed
-  if (is.character(ref)){
     ref <- make.ref(ref, frequency, j, cshift)
-  } 
+  }
   if (!("NMRSignal1D" %in% is(ref))){
     cat(crayon::red("nmr.spectra.processing::calibrateSpectra >>"
                     ,"invalid reference\n"))
@@ -201,23 +207,26 @@ calibrateSpectra <- function(ppm, Y,ref=c("tsp","glucose","alanine","serum"
   shifts <- calibrateToSignal(ppm,Y,ref,rOref, maxShift=maxShift
                               ,threshold=threshold,...)
   
-  #Shift whole spectra by the corresponding shifts
-  if (is.matrix(Y)){
-    Y <- t(sapply(1:dim(Y)[1],function(i){
-      shift <- shifts[i]
-      y <- Y[i,]
-      shiftSeries(y,shift, padding=padding, from=from)
-    }))
-    rownames(Y) <- rowLabels
-    return(Y)
-  } else{
-    shiftSeries(Y,shifts,padding=padding,from=from)
+  if (shift){
+    #Shift whole spectra by the corresponding shifts
+    if (is.matrix(Y)){
+      Y <- t(sapply(1:dim(Y)[1],function(i){
+        shift <- shifts[i]
+        y <- Y[i,]
+        shiftSeries(y,shift, padding=padding, from=from)
+      }))
+      rownames(Y) <- rowLabels
+      return(Y)
+    } else{
+      return(shiftSeries(Y,shifts,padding=padding,from=from))
+    }
   }
+  return(shifts)
 }
 
-#Auxiliary function, returns the shift values but does not shift so that it can
-#be used by the actual exports to either calibrate the spectra to a signal or
-#calibrate the signal to a spectrum
+#Auxiliary function, returns the shift values but does not shift, delaying the
+#choice e.g. on wether to calibrate spectrum to signal (calibrateSpectra),
+#calibrate signal to spectrum (calibrateSignal), or keep the shifts ()
 calibrateToSignal <- function(ppm, Y, signal, rOref=signalDomain(signal,30)
                               , maxShift=1/3,threshold=0.2
                               ,lambda=1e3, ...){
