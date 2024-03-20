@@ -46,6 +46,7 @@ shiftSeries <- function(x,shift,padding="sampling"
 #' recycled to match the number of rows of Y. No warnings are raised, be responsible.
 #' @returns The shifted spectra
 #' @importFrom signal interp1
+#' @export
 shiftSpectra <- function(ppm,Y,shift,hertz=FALSE,SF=600
                          ,interpol="spline"){
   #Auxiliary function, shifts one spectrum
