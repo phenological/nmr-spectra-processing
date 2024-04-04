@@ -20,10 +20,10 @@ test_that("calibration works", {
     expect_equal(calib,avo3CalSucro)
     
     sucrosecal <- calibrateSignal(ppm,avo3[1,],sucrose)
-    expect_equal(round(sucrosecal@chemicalShift,4),5.4155)
-    expect_equal(round(sapply(sucrosecal@peaks,function(p) p@x),4)
-                 ,c(5.4108,5.4202))
-    expect_equal(round(sapply(sucrosecal@peaks,function(p) p@y),4)
+    expect_equal(round(sucrosecal@chemicalShift,5),5.41577)
+    expect_equal(round(sapply(sucrosecal@peaks,function(p) p@x),5)
+                 ,c(5.41107,5.42047))
+    expect_equal(round(sapply(sucrosecal@peaks,function(p) p@y),5)
                  ,c(1L,1L))
     
     expect_no_condition(calibrateSpectra(ppm,avo3[1,]))
@@ -31,5 +31,7 @@ test_that("calibration works", {
                  ,avo3CalAla)
     expect_equal(calibrateSpectra(ppm,as.character(avo3[1,]),"alanine",frequency=400)
     ,avo3CalAla[1,])
+    expect_type(calibrateSpectra(ppm,avo3,"alanine",shift=FALSE)
+                ,"integer")
 })
 

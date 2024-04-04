@@ -26,11 +26,11 @@ crop <- function(ppm,start=-Inf,end=Inf,roi){
 #' Quality of life function to save you a few key strokes and some neural pulses.
 #' Questionable value.
 #' @param ppm, numeric, chemical shift scale
-#' @param v, numeric, chemical shift value
+#' @param ..., numeric, chemical shift values to be found
 #' @returns integer, the index of the element of ppm that is closest to v
 #' @export
-getI <- function(ppm,v){
-  which.min(abs(ppm-v))
+getI <- function(ppm,...){
+  sapply(c(...),function(v) which.min(abs(ppm-v)))
 }
 
 #' Get the \emph{n} spectra with the highest intensity on the given chemical shift
@@ -88,39 +88,66 @@ top <- function(ppm,Y,cshift,n=10L,roi=c(-Inf,Inf),bottom=FALSE,index=FALSE){
 #' 
 #' Wrapper to \code{\link[graphics]{matplot}} for plotting spectra. Crude 
 #' compared to \code{ggplot2} but faster.
-#'  but faster.
+#' 
 #' @param ppm numeric, spectra ppm scale
-#' @param y numeric or matrix, intensities, spectra in rows
+#' @param y numeric vector or matrix, nmr intensities, spectra in rows. If neither
+#' vector nor matrix, argument is cast as.matrix. Type compliance is recommended.
 #' @param roi numeric, optional, limits of the Region of Interest to be plotted.
 #'  Defaults to the range of \code{ppm}.
 #' @param by numeric, optional, number of spectra to be overlayed on each plot
 #' @param type optional, defaults to "l" (lines), default recommended for speed
 #' @param lty optional, defaults to 1 (continuous line)
-#' @param reverse logic, optional, if TRUE (default) the x scale of the plot 
-#' increases from right to left as it's customary in NMR spectroscopy
 #' @param legend, optional, position of the legend as specified in
 #' \code{\link[graphics]{legend}}
 #' @param label, character, optional, series labels
+#' @param reverse logic, optional, if TRUE (default) the x scale of the plot 
+#' increases from right to left as it's customary in NMR spectroscopy
+#' @param resolution, character. By default the spectra are sampled down to the
+#' resolution of the current output graphics device, to improve running time on
+#'  big input matrices. You can force the full spectral resolution to be kept by
+#' setting this parameter to "full".
 #' @param palette vector of colors, equivalent to matplot(col). The default is
 #' Set1 copied from RColorBrewer
 #' @param ..., additional arguments to be passed to \code{\link[graphics]{matplot}}
 #' @returns NULL
 #' @importFrom graphics matplot
+#' @importFrom grDevices dev.size
 #' @export
-smatplot <- function(ppm, y, by, roi, type="l",lty=1
-                     ,reverse=TRUE,legend,label
+smatplot <- function(ppm, y, roi, by, type="l",lty=1,legend,label
+                     ,reverse=TRUE,resolution=c("full","dev")[2]
                      ,palette=c("#E41A1C","#377EB8","#4DAF4A","#984EA3","#FF7F00"
                                 ,"#FFFF33","#A65628","#F781BF","#999999"),...){
+  #Cast if not complying to type
+   if(!is.matrix(y) & !is.vector(y)){
+    cat(crayon::yellow("nmr-spectra-processing::smatplot >>"
+                       ,"Argument Y being cast as.matrix.\n"
+                       ,"Unpredictable results may follow if casting to"
+                       ,"numeric matrix fails\n"))
+    y <- as.matrix(y)
+   }
+  #transpose for matplot compability
   if (is.matrix(y)) y <- t(y) else y <- as.matrix(y)
-  
+  #roi filter
   if (!missing(roi)){
     fi <- ppm >= roi[1] & ppm <= roi[2]
     ppm <- ppm[fi]
-    y <- y[fi,]
+    y <- y[fi,,drop=FALSE]
   }
   else{
     roi <- range(ppm)
   }
+  #Adjust resolution
+  if (resolution=="dev"){
+    pixels <- grDevices::dev.size(units="px")[1]
+    pointz <- length(ppm)
+    if (pointz > pixels){
+      pointsPerPixel <- pointz %/% pixels
+      fi <- 1:pointz %% pointsPerPixel == 0
+      ppm <- ppm[fi]
+      y <- y[fi,,drop=FALSE]
+    }
+  }
+  #Reverse scale
   if (reverse){
     roi <- rev(roi)
   }

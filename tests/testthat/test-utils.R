@@ -7,6 +7,8 @@ test_that("crop works", {
 
 test_that("getI works", {
   expect_equal(getI(ppm,5),19422L)
+  expect_equal(getI(ppm,c(5,5.2))
+               ,c(19422L,19858L))
 })
 
 test_that("top works", {

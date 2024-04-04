@@ -7,13 +7,14 @@
 smatplot(
   ppm,
   y,
-  by,
   roi,
+  by,
   type = "l",
   lty = 1,
-  reverse = TRUE,
   legend,
   label,
+  reverse = TRUE,
+  resolution = c("full", "dev")[2],
   palette = c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33",
     "#A65628", "#F781BF", "#999999"),
   ...
@@ -22,24 +23,30 @@ smatplot(
 \arguments{
 \item{ppm}{numeric, spectra ppm scale}
 
-\item{y}{numeric or matrix, intensities, spectra in rows}
-
-\item{by}{numeric, optional, number of spectra to be overlayed on each plot}
+\item{y}{numeric vector or matrix, nmr intensities, spectra in rows. If neither
+vector nor matrix, argument is cast as.matrix. Type compliance is recommended.}
 
 \item{roi}{numeric, optional, limits of the Region of Interest to be plotted.
 Defaults to the range of \code{ppm}.}
+
+\item{by}{numeric, optional, number of spectra to be overlayed on each plot}
 
 \item{type}{optional, defaults to "l" (lines), default recommended for speed}
 
 \item{lty}{optional, defaults to 1 (continuous line)}
 
-\item{reverse}{logic, optional, if TRUE (default) the x scale of the plot
-increases from right to left as it's customary in NMR spectroscopy}
-
 \item{legend, }{optional, position of the legend as specified in
 \code{\link[graphics]{legend}}}
 
 \item{label, }{character, optional, series labels}
+
+\item{reverse}{logic, optional, if TRUE (default) the x scale of the plot
+increases from right to left as it's customary in NMR spectroscopy}
+
+\item{resolution, }{character. By default the spectra are sampled down to the
+resolution of the current output graphics device, to improve running time on
+big input matrices. You can force the full spectral resolution to be kept by
+setting this parameter to "full".}
 
 \item{palette}{vector of colors, equivalent to matplot(col). The default is
 Set1 copied from RColorBrewer}
@@ -49,5 +56,4 @@ Set1 copied from RColorBrewer}
 \description{
 Wrapper to \code{\link[graphics]{matplot}} for plotting spectra. Crude
 compared to \code{ggplot2} but faster.
-but faster.
 }

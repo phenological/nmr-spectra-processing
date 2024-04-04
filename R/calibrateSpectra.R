@@ -11,6 +11,12 @@
 #'  see \code{\link[stats]{ccf}}.
 #' @param threshold numeric, minimum cross-correlation required for alignment.
 #'  See \code{\link{alignSeries}}.
+#' @param lambda numeric. Parameter to \code{\link[ptw]{asysm}}. \code{calibrateSignal} uses
+#' \code{\link{baselineCorrection}} with an unusually small \code{lambda} to
+#' flatten broad peaks that interfere with signal alignment. The default
+#' \code{lambda=1e3} works well in typical cases.
+#' @param shift logical, whether to return the calibrated signal (TRUE, default) 
+#' or to return the calibrating shift
 #' @param ... additional arguments for \code{\link{alignSeries}}.
 #' @details Interpolates the signal with \code{\link{signalToY}} and aligns the
 #' resulting trace to the spectrum in the rOref using \code{\link{alignSeries}}.
@@ -23,15 +29,19 @@
 #' @export
 calibrateSignal <- function(ppm,y,signal
                             , maxShift=1/3,threshold=0.2
-                            ,rOref=signalDomain(signal,30), ...){
+                            ,rOref=signalDomain(signal,30)
+                            ,lambda=1e3, shift=TRUE,...){
   aShift <- calibrateToSignal(ppm,y,signal,rOref, maxShift=maxShift
-                              ,threshold=0.2,...)
+                              ,threshold,lambda=lambda,...)
   aShift <- aShift * (ppm[2] - ppm[1])
-  for (i in 1:length(signal@peaks)){
-    signal@peaks[[i]]@x <- signal@peaks[[i]]@x - aShift
+  if (shift){
+    for (i in 1:length(signal@peaks)){
+      signal@peaks[[i]]@x <- signal@peaks[[i]]@x - aShift
+    }
+    signal@chemicalShift <- signal@chemicalShift - aShift
+    return(signal)
   }
-  signal@chemicalShift <- signal@chemicalShift - aShift
-  return(signal)
+  return(aShift)
 }
 
 #' Spectra calibration
@@ -40,10 +50,11 @@ calibrateSignal <- function(ppm,y,signal
 #' @param ppm numeric, spectra chemical shift scale
 #' @param Y matrix, intensities, spectra in rows
 #' @param ref character or \code{\linkS4class{NMRSignal1D}}, the reference signal 
-#' for calibration. Either "glucose", "alanine", "tsp", or a
+#' for calibration. Either "glucose", "alanine", "tsp", "serum", or a
 #' \code{\linkS4class{NMRSignal1D}}. "tsp" calibrates to a singlet at 0 ppm. "alanine"
 #' calibrates to a doublet at 1.48 ppm with j=7.26. "glucose" aligns to a doublet
-#' at 5.223 with j=3.63.
+#' at 5.223 with j=3.63. "serum" aligns to the glucose double with a (typically)
+#' extended range of shifting.
 #' @param frequency numeric, the spectrometer frequency in MHz. Only used for
 #' character \code{ref}. Default: 600
 #' @param rOref numeric, optional. Limits of the Region of Reference within
@@ -66,6 +77,11 @@ calibrateSignal <- function(ppm,y,signal
 #' @param from numeric, optional. Filter for the spectral region to be used for
 #'  padding after the spectrum is shifted in the "sampling" method. See 
 #'  \code{\link{pad}} for details. Default: last 1/15th points
+#' @param lambda numeric. You should not need to tamper with this parameter
+#' unless you are attempting something extraordinary. See \code{\link{calibrateSignal}}
+#' for details
+#' @param shift logical, whether to return the calibrated spectra (TRUE, default)
+#' or to return the calibrating shifts
 #' @param ... additional arguments for \code{\link{alignSeries}}, see \strong{Details}
 #' @details Interpolates the reference signal with \code{\link{signalToY}} to 
 #' obtain a trace. Then, it aligns each row of the spectra matrix to this trace,
@@ -81,14 +97,14 @@ calibrateSignal <- function(ppm,y,signal
 #' @importClassesFrom fusion NMRPeak1D
 #' @importClassesFrom fusion NMRSignal1D
 #' @export
-calibrateSpectra <- function(ppm, Y,ref=c("tsp","glucose","alanine"
-                                        ,"NMRSignal1D see documentation")[1]
+calibrateSpectra <- function(ppm, Y,ref=c("tsp","glucose","alanine","serum"
+                                        ,"an NMRSignal1D, see documentation")[1]
                              ,frequency=600, maxShift=1/3,threshold=0.2
                              ,rOref, cshift, j
                              ,padding=c("zeroes","circular","sampling")[1]
                              ,from=as.integer(length(ppm)*14/15):length(ppm)
-                             , ...){
-  
+                             ,lambda=1e3 , shift=TRUE,...){
+  rowLabels <- rownames(Y)
   #Type check and casting
   if (!is.numeric(ppm)){
     cat(crayon::yellow("nmr.spectra.processing::calibrateSpectra >>"
@@ -142,7 +158,7 @@ calibrateSpectra <- function(ppm, Y,ref=c("tsp","glucose","alanine"
                  )
       ))
     }
-    if (ref == "glucose"){
+    if (ref %in% c("glucose","serum")){
      if (missing(j)) j <- 3.63
      j <- j / (2 * frequency)
      if(missing(cshift)) cshift <- 5.223
@@ -162,50 +178,70 @@ calibrateSpectra <- function(ppm, Y,ref=c("tsp","glucose","alanine"
     stop()
   }
   
-  #create ref if needed
-  if (is.character(ref)) ref <- make.ref(ref, frequency, j, cshift)
+  if(missing(rOref)) rOref <- NULL
+  
+  #create ref from character reference
+  if (is.character(ref)){
+    #Assign tailored rOref if necessary
+    if (is.null(rOref)){
+      if (ref == "tsp"){
+        rOref <- c(-0.02,0.02)
+      }  else{
+        if (ref == "serum"){
+          rOref <- c(5.2,5.4)
+        }
+      }
+    }
+    ref <- make.ref(ref, frequency, j, cshift)
+  }
   if (!("NMRSignal1D" %in% is(ref))){
     cat(crayon::red("nmr.spectra.processing::calibrateSpectra >>"
                     ,"invalid reference\n"))
     stop()
   }
   
-  #compute rOref if needed (tsp is handled differently because it's modeled as a "line")
-  if (missing(rOref)){
-    if (ref@id == "TSPbration"){
-      rOref <- c(-0.02,0.02)
-    } else rOref <- signalDomain(ref)
-  }
+  #Compute default rOref if necessary
+  if(is.null(rOref)) rOref <- signalDomain(ref,30)
   
   #Align normalized spectra on rOref to reference and get shifts
   shifts <- calibrateToSignal(ppm,Y,ref,rOref, maxShift=maxShift
-                              ,threshold=0.2,...)
+                              ,threshold=threshold,...)
   
-  #Shift whole spectra by the corresponding shifts
-  if (is.matrix(Y)){
-    t(sapply(1:dim(Y)[1],function(i){
-      shift <- shifts[i]
-      y <- Y[i,]
-      shiftSeries(y,shift, padding=padding, from=from)
-    }))
-  } else{
-    shiftSeries(Y,shifts,padding=padding,from=from)
+  if (shift){
+    #Shift whole spectra by the corresponding shifts
+    if (is.matrix(Y)){
+      Y <- t(sapply(1:dim(Y)[1],function(i){
+        shift <- shifts[i]
+        y <- Y[i,]
+        shiftSeries(y,shift, padding=padding, from=from)
+      }))
+      rownames(Y) <- rowLabels
+      return(Y)
+    } else{
+      return(shiftSeries(Y,shifts,padding=padding,from=from))
+    }
   }
+  return(shifts)
 }
 
-#Auxiliary function, returns the shift values but does not shift so that it can
-#be used by the actual exports to either calibrate the spectra to a signal or
-#calibrate the signal to a spectrum
+#Auxiliary function, returns the shift values but does not shift, delaying the
+#choice e.g. on wether to calibrate spectrum to signal (calibrateSpectra),
+#calibrate signal to spectrum (calibrateSignal), or keep the shifts ()
 calibrateToSignal <- function(ppm, Y, signal, rOref=signalDomain(signal,30)
-                              , maxShift=1/3,threshold=0.2, ...){
+                              , maxShift=1/3,threshold=0.2
+                              ,lambda=1e3, ...){
   rOref <- crop(ppm,roi=rOref)
   ppm <- ppm[rOref]
+  #bcorr annoyting broad features
   #Align normalized spectra on rOref to reference and get shifts
   if (is.matrix(Y)){
-    normS <- t(apply(Y[,rOref],1,function(y) y / max(y)))
+    Y <- Y[,rOref]
+    Y <- baselineCorrection(Y,lambda=lambda)
+    normS <- t(apply(Y,1,function(y) y / max(y)))
   } else{
-    normS <- Y[rOref]
-    normS <- normS / max(normS)
+    Y <- Y[rOref]
+    Y <-  baselineCorrection(Y,lambda=lambda)
+    normS <- Y / max(Y)
   }
   alignSeries(normS, signalToY(normalizeSignal(signal),ppm),shift=FALSE
               ,lag.max=length(ppm) * maxShift, threshold=threshold, ...)

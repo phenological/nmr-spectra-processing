@@ -7,7 +7,7 @@
 calibrateSpectra(
   ppm,
   Y,
-  ref = c("tsp", "glucose", "alanine", "NMRSignal1D see documentation")[1],
+  ref = c("tsp", "glucose", "alanine", "serum", "an NMRSignal1D, see documentation")[1],
   frequency = 600,
   maxShift = 1/3,
   threshold = 0.2,
@@ -16,6 +16,8 @@ calibrateSpectra(
   j,
   padding = c("zeroes", "circular", "sampling")[1],
   from = as.integer(length(ppm) * 14/15):length(ppm),
+  lambda = 1000,
+  shift = TRUE,
   ...
 )
 }
@@ -25,10 +27,11 @@ calibrateSpectra(
 \item{Y}{matrix, intensities, spectra in rows}
 
 \item{ref}{character or \code{\linkS4class{NMRSignal1D}}, the reference signal
-for calibration. Either "glucose", "alanine", "tsp", or a
+for calibration. Either "glucose", "alanine", "tsp", "serum", or a
 \code{\linkS4class{NMRSignal1D}}. "tsp" calibrates to a singlet at 0 ppm. "alanine"
 calibrates to a doublet at 1.48 ppm with j=7.26. "glucose" aligns to a doublet
-at 5.223 with j=3.63.}
+at 5.223 with j=3.63. "serum" aligns to the glucose double with a (typically)
+extended range of shifting.}
 
 \item{frequency}{numeric, the spectrometer frequency in MHz. Only used for
 character \code{ref}. Default: 600}
@@ -36,7 +39,7 @@ character \code{ref}. Default: 600}
 \item{maxShift}{numeric, the maximum allowed shift as a fraction of the rOref,
 see \code{\link[stats]{ccf}}}
 
-\item{threshold}{numeric, minimum cross-correlation requiered for alignment.
+\item{threshold}{numeric, minimum cross-correlation required for alignment.
 See \code{\link{alignSeries}}}
 
 \item{rOref}{numeric, optional. Limits of the Region of Reference within
@@ -59,6 +62,13 @@ the shifted spectra. See \code{\link{pad}} for details. Default: "zeroes".}
 \item{from}{numeric, optional. Filter for the spectral region to be used for
 padding after the spectrum is shifted in the "sampling" method. See
 \code{\link{pad}} for details. Default: last 1/15th points}
+
+\item{lambda}{numeric. You should not need to tamper with this parameter
+unless you are attempting something extraordinary. See \code{\link{calibrateSignal}}
+for details}
+
+\item{shift}{logical, whether to return the calibrated spectra (TRUE, default)
+or to return the calibrating shifts}
 
 \item{...}{additional arguments for \code{\link{alignSeries}}, see \strong{Details}}
 }

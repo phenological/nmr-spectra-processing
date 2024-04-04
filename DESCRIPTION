@@ -6,7 +6,7 @@ Authors@R:
             role = c("aut", "cre"), comment = c(ORCID = "0000-0003-1668-7225"))
 Description: Collection of tools for processing Fourier-transformed NMR spectra:
  baseline correction, shifting, alignment, calibration to a reference resonance, 
- peak integration and more. Also packs some utils to help navigate NMR data without 
+ peak integration. Also packs some utils to help navigate NMR data without 
  leaving R.
 License: MIT + file LICENSE
 Encoding: UTF-8
@@ -18,7 +18,9 @@ Config/testthat/edition: 3
 Imports: 
     crayon,
     ptw,
+    methods,
     fusion,
-    methods
+    signal
+Remotes: github::phenological/fusion
 Depends: 
     R (>= 2.10)
