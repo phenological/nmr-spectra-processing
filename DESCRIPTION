@@ -1,9 +1,14 @@
 Package: nmr.spectra.processing
 Title: Process Fourier-transformed NMR spectra
-Version: 0.0.0.9000
+Version: 1.1.0
 Authors@R: 
-    person("Andrés", "Bernal", , "AndresFernando.BernalEscobar@murdoch.edu.au", 
-            role = c("aut", "cre"), comment = c(ORCID = "0000-0003-1668-7225"))
+    c(person("Andrés", "Bernal", , "AndresFernando.BernalEscobar@murdoch.edu.au", 
+            role = c("aut", "cre"), comment = c(ORCID = "0000-0003-1668-7225")),
+            person(given = "Julien",
+           family = "Wist",
+           role = c("aut"),
+           email = "julien.wist@murdoch.edu.au",
+           comment = c(ORCID = "0000-0002-3416-2572")))
 Description: Collection of tools for processing Fourier-transformed NMR spectra:
  baseline correction, shifting, alignment, calibration to a reference resonance, 
  peak integration. Also packs some utils to help navigate NMR data without 
