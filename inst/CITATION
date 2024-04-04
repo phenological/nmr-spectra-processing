@@ -1,7 +1,8 @@
 year <- sub("-.*", "", packageVersion("nmr.spectra.processing"))
 note <- sprintf("R package version %s", format.Date(Sys.Date(), "%Y"))
 
-bibentry(bibtype = "Manual",
+bibentry(bibtype = "Misc",
+         key = "nmrSpectraProcessing"
          title = "{nmr-spectra-processing: what is needing to prepare NMR datasets}",
          author = c(person("Julien", "Wist"), person("Andres", "Bernal"), person("Andres M.", "Castillo")),
          year = year,
