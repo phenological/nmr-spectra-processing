@@ -20,9 +20,14 @@ noiseLevel <- function(ppm,y,level=0.99,rOref=c(9.8,10)){
                        ,"numeric vector fails\n"))
     ppm <- as.numeric(ppm)
   }
-  if(!is.numeric(rOref) | length(rOref) != 2){
+  if(!is.numeric(rOref) | length(rOref) != 2 | rOref[1] >= rOref[2]){
     cat(crayon::red("nmr.spectra.processing::noiseLevel >>"
                     ,"Invalid rOref\n"))
+    stop()
+  }
+  if (rOref[1] >= max(ppm) | rOref[2] <= min(ppm)){
+    cat(crayon::red("nmr.spectra.processing::noiseLevel >>"
+                    ,"rOref outside of ppm range\n"))
     stop()
   }
   fi <- ppm >= rOref[1] & ppm <= rOref[2]

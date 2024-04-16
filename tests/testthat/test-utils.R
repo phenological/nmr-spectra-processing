@@ -4,7 +4,6 @@ test_that("crop works", {
   expect_equal(avo3[,crop(ppm,end=1.52)], avo3StartToAla)
   expect_equal(avo3[,crop(ppm,start=5.4)], avo3SucrToEnd)
 })
-
 test_that("getI works", {
   expect_equal(getI(ppm,5),19422L)
   expect_equal(getI(ppm,c(5,5.2))
@@ -21,6 +20,8 @@ test_that("smatplot works", {
   expect_no_condition(smatplot(ppm,avo3))
   expect_no_condition(smatplot(ppm,avo3,roi=c(1.4,1.6)))
   expect_no_condition(smatplot(ppm,avo3,by=2,legend="topleft",label=1:3))
+  expect_no_condition(smatplot(ppm,avo3,resolution="full"))
+  expect_no_condition(smatplot(ppm,avo3,resolution="full",reduce=max))
 })
 
 test_that("signalDomain works", {

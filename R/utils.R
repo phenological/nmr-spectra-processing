@@ -102,19 +102,51 @@ top <- function(ppm,Y,cshift,n=10L,roi=c(-Inf,Inf),bottom=FALSE,index=FALSE){
 #' @param label, character, optional, series labels
 #' @param reverse logic, optional, if TRUE (default) the x scale of the plot 
 #' increases from right to left as it's customary in NMR spectroscopy
-#' @param resolution, character. By default the spectra are sampled down to the
-#' resolution of the current output graphics device, to improve running time on
-#'  big input matrices. You can force the full spectral resolution to be kept by
-#' setting this parameter to "full".
+#' @param resolution, character. If "full" all data are passed to 
+#' \code{\link[graphics]{matplot}}. If "dev", data are binned to fit the graphic
+#'  device's resolution. By default\code{smatplot} chooses according to data 
+#'  size. See Details.
+#' @param reduce, function used to compute bin values. See Details
 #' @param palette vector of colors, equivalent to matplot(col). The default is
 #' Set1 copied from RColorBrewer
 #' @param ..., additional arguments to be passed to \code{\link[graphics]{matplot}}
 #' @returns NULL
+#' @details
+#' When working with high resolution spectra it is likely that the resolution
+#' of the spectrum is higher than the pixel resolution of the graphic device,
+#' which places unnecessary burden on the renderer. By default \code{smatplot}
+#' bins the spectra matrix to match the pixel resolution of the active graphic 
+#' device (as reported by \code{\link[grDevices]{dev.size}}) if the input spectra
+#' contain more than 1.2 million points total. The user can force full resolution
+#' or binned resolution by setting \code{resolution} to "full" or "dev" 
+#' respectively.
+#' 
+#' By default, bin values are computed by sampling each spectrum at regular 
+#' intervals. This method is fast, which is good for the visualization of large 
+#' datasets, but it is inaccurate in the intensity coordinate. Alternatively, 
+#' the user may pass a function to \code{reduce} that will be used to compute the
+#' bins. In this case, each spectrum is partitioned with  \code{\link[base]{split}}
+#' and the \code{reduce} function is applied to compute each bin's intensity value
+#' and ppm. Beware that this may lead to inaccuracies in the frequency coordinate
+#' that become apparent if you enhance the resolution of the graphic device while 
+#' the plot is in view. From experience, \code{reduce=max} produces the most 
+#' accurate picture of spectra peak intensities, while \code{reduce=mean} or
+#' \code{median} provide a good compromise between accurate intensities and ppm. 
+#' Either of the three should be equally accurate on the frequency scale
+#' as long as the pixel resolution is not enhanced after plotting.
+#' 
+#' Keep in mind that the custom \code{reduce} plot may be slower to compute
+#' but it will render faster.
 #' @importFrom graphics matplot
 #' @importFrom grDevices dev.size
 #' @export
 smatplot <- function(ppm, y, roi, by, type="l",lty=1,legend,label
-                     ,reverse=TRUE,resolution=c("full","dev")[2]
+                     ,reverse=TRUE
+                     ,resolution=c(
+                       "full","dev"
+                       ,ifelse(length(as.matrix(y)) > 1.2e6, "dev", "full")
+                       )[3]
+                     ,reduce
                      ,palette=c("#E41A1C","#377EB8","#4DAF4A","#984EA3","#FF7F00"
                                 ,"#FFFF33","#A65628","#F781BF","#999999"),...){
   #Cast if not complying to type
@@ -137,14 +169,47 @@ smatplot <- function(ppm, y, roi, by, type="l",lty=1,legend,label
     roi <- range(ppm)
   }
   #Adjust resolution
+  ##Choose resolution if not provided explicitly
+  pointz <- dim(y)[1]
+  smpls <- dim(y)[2]
+  # if (missing(resolution)){
+  #   if ((pointz * smpls) > 1.2e6){
+  #     resolution <- "dev"
+  #   } else{
+  #     resolution <- "full"
+  #   }
+  # }
+  
+  #Adjust resolution if required
   if (resolution=="dev"){
     pixels <- grDevices::dev.size(units="px")[1]
-    pointz <- length(ppm)
     if (pointz > pixels){
+      cat(crayon::yellow("nmr.spectra.processing::smatplot >>"
+                         ,"Binning spectra to fit the graphic device's resolution\n"
+                         ,"If you want to keep full resolution set argument resolution='full'\n"
+                         )
+          )
       pointsPerPixel <- pointz %/% pixels
-      fi <- 1:pointz %% pointsPerPixel == 0
-      ppm <- ppm[fi]
-      y <- y[fi,,drop=FALSE]
+      if (missing(reduce)){
+        fi <- 1:pointz %% pointsPerPixel == 0
+        ppm <- ppm[fi]
+        y <- y[fi,,drop=FALSE]  
+      } else{
+        cat(crayon::yellow("nmr.spectra.processing::smatplot >>"
+                           ,"Applying your custom reduce function\n"
+                           )
+            )
+        bins <- as.factor(1:pointz %/% pointsPerPixel)
+        ppm <- unname(sapply(split(ppm,bins),reduce))
+        y <- apply(y,2,function(v){
+          unname(
+            sapply(
+              split(v,1:pointz %/% pointsPerPixel)
+              ,reduce
+            )
+          )
+        })
+      }
     }
   }
   #Reverse scale

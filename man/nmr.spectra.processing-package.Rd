@@ -11,5 +11,10 @@ Collection of tools for processing Fourier-transformed NMR spectra: baseline cor
 \author{
 \strong{Maintainer}: Andrés Bernal \email{AndresFernando.BernalEscobar@murdoch.edu.au} (\href{https://orcid.org/0000-0003-1668-7225}{ORCID})
 
+Authors:
+\itemize{
+  \item Julien Wist \email{julien.wist@murdoch.edu.au} (\href{https://orcid.org/0000-0002-3416-2572}{ORCID})
+}
+
 }
 \keyword{internal}
