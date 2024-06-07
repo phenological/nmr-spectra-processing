@@ -23,8 +23,9 @@
 #' This is useful e.g. for fine-tuning a quantification model.
 #' @returns a \code{\linkS4class{NMRSignal1D}} with peak maxima shifted to
 #' align with the reference spectrum
-#' @importClassesFrom fusion NMRPeak1D
-#' @importClassesFrom fusion NMRSignal1D
+#' @importClassesFrom nmr.peaks NMRPeak1D
+#' @importClassesFrom nmr.peaks NMRSignal1D
+#' @importFrom nmr.peaks signalDomain
 #' @importFrom stats ccf
 #' @export
 calibrateSignal <- function(ppm,y,signal
@@ -94,8 +95,10 @@ calibrateSignal <- function(ppm,y,signal
 #'  object.
 #' @returns calibrated spectra matrix
 #' @importFrom stats ccf
-#' @importClassesFrom fusion NMRPeak1D
-#' @importClassesFrom fusion NMRSignal1D
+#' @importFrom methods is new
+#' @importClassesFrom nmr.peaks NMRPeak1D
+#' @importClassesFrom nmr.peaks NMRSignal1D
+#' @import nmr.peaks
 #' @export
 calibrateSpectra <- function(ppm, Y,ref=c("tsp","glucose","alanine","serum"
                                         ,"an NMRSignal1D, see documentation")[1]

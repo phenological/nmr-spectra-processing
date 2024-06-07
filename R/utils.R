@@ -95,11 +95,12 @@ top <- function(ppm,Y,cshift,n=10L,roi=c(-Inf,Inf),bottom=FALSE,index=FALSE){
 #' @param roi numeric, optional, limits of the Region of Interest to be plotted.
 #'  Defaults to the range of \code{ppm}.
 #' @param by numeric, optional, number of spectra to be overlayed on each plot
-#' @param type optional, defaults to "l" (lines), default recommended for speed
-#' @param lty optional, defaults to 1 (continuous line)
+#' @param lty optional, line type, defaults to 1 (continuous line). Note that this
+#' parameter is passed both to \code{\link[graphics]{matplot}} and \code{\link[graphics]{legend}},
+#' so you always get lines in your legend (see ... below)
 #' @param legend, optional, position of the legend as specified in
 #' \code{\link[graphics]{legend}}
-#' @param label, character, optional, series labels
+#' @param label, character, optional, series labels for the legend
 #' @param reverse logic, optional, if TRUE (default) the x scale of the plot 
 #' increases from right to left as it's customary in NMR spectroscopy
 #' @param resolution, character. If "full" all data are passed to 
@@ -107,11 +108,28 @@ top <- function(ppm,Y,cshift,n=10L,roi=c(-Inf,Inf),bottom=FALSE,index=FALSE){
 #'  device's resolution. By default\code{smatplot} chooses according to data 
 #'  size. See Details.
 #' @param reduce, function used to compute bin values. See Details
-#' @param palette vector of colors, equivalent to matplot(col). The default is
-#' Set1 copied from RColorBrewer
-#' @param ..., additional arguments to be passed to \code{\link[graphics]{matplot}}
+#' @param col vector of series colors. The default is Set1 copied from 
+#' RColorBrewer. 
+#' @param ..., additional arguments for customization. These arguments are
+#' passed either to \code{\link[graphics]{matplot}} for plot customization, or
+#' to  \code{\link[graphics]{legend}} for legend customization. Beware that some
+#' of these parameters are shared, such as \code{ltw} and the non-optional
+#' parameters \code{lty} and \code{col}. This means, for instance, that it is 
+#' not possible to get a legend without lines or to unmatch legend linewidths 
+#' from the plot's.
 #' @returns NULL
 #' @details
+#' tl;dr: For spectra with less than ~1.2 million points the default method
+#' renders fast and exact plots. Otherwise:
+#' * the default method adds a quick pre-processing step to make the plot fast 
+#' to render, at the cost of inaccurate peak heights
+#' * \code{resolution="dev", reduce=max} pre-processes slower, renders as fast 
+#' and gives accurate peak heights, but introduces ppm inaccuracies visible when 
+#' zooming in
+#' * \code{resolution="full"} is exact but very slow to render.
+#' 
+#' Further details follow.
+#' 
 #' When working with high resolution spectra it is likely that the resolution
 #' of the spectrum is higher than the pixel resolution of the graphic device,
 #' which places unnecessary burden on the renderer. By default \code{smatplot}
@@ -123,32 +141,34 @@ top <- function(ppm,Y,cshift,n=10L,roi=c(-Inf,Inf),bottom=FALSE,index=FALSE){
 #' 
 #' By default, bin values are computed by sampling each spectrum at regular 
 #' intervals. This method is fast, which is good for the visualization of large 
-#' datasets, but it is inaccurate in the intensity coordinate. Alternatively, 
-#' the user may pass a function to \code{reduce} that will be used to compute the
-#' bins. In this case, each spectrum is partitioned with  \code{\link[base]{split}}
-#' and the \code{reduce} function is applied to compute each bin's intensity value
-#' and ppm. Beware that this may lead to inaccuracies in the frequency coordinate
-#' that become apparent if you enhance the resolution of the graphic device while 
-#' the plot is in view. From experience, \code{reduce=max} produces the most 
-#' accurate picture of spectra peak intensities, while \code{reduce=mean} or
-#' \code{median} provide a good compromise between accurate intensities and ppm. 
-#' Either of the three should be equally accurate on the frequency scale
-#' as long as the pixel resolution is not enhanced after plotting.
+#' datasets, but it produces inaccurate estimates of peak height. Alternatively, 
+#' the user may pass a function to the \code{reduce} parameter that will be used 
+#' to compute the bins. In this case, each spectrum is partitioned with 
+#' \code{\link[base]{split}} and the \code{reduce} function is applied to compute 
+#' each bin's intensity value and ppm. Beware that this may lead to inaccuracies 
+#' in the frequency coordinate that become apparent if you enhance the resolution
+#' of the graphic device while the plot is in view. From experience, 
+#' \code{reduce=max} produces the most accurate picture of spectra peak 
+#' intensities, while \code{reduce=mean} or \code{median} provide a compromise 
+#' between accurate intensities and ppm. Either of the three should be equally 
+#' accurate on the frequency scale as long as the pixel resolution is not 
+#' enhanced after plotting. Using \code{reduce} adds a expensive pre-processing
+#' step that makes the plot slower to compute but the result renders much 
+#' faster than \code{resolution="full"}. 
 #' 
-#' Keep in mind that the custom \code{reduce} plot may be slower to compute
-#' but it will render faster.
 #' @importFrom graphics matplot
 #' @importFrom grDevices dev.size
 #' @export
-smatplot <- function(ppm, y, roi, by, type="l",lty=1,legend,label
+smatplot <- function(ppm, y, roi, by,lty=1,legend,label
                      ,reverse=TRUE
                      ,resolution=c(
                        "full","dev"
                        ,ifelse(length(as.matrix(y)) > 1.2e6, "dev", "full")
                        )[3]
                      ,reduce
-                     ,palette=c("#E41A1C","#377EB8","#4DAF4A","#984EA3","#FF7F00"
-                                ,"#FFFF33","#A65628","#F781BF","#999999"),...){
+                     ,col=c("#E41A1C","#377EB8","#4DAF4A","#984EA3","#FF7F00"
+                                ,"#FFFF33","#A65628","#F781BF","#999999")
+                     ,...){
   #Cast if not complying to type
    if(!is.matrix(y) & !is.vector(y)){
     cat(crayon::yellow("nmr-spectra-processing::smatplot >>"
@@ -217,14 +237,35 @@ smatplot <- function(ppm, y, roi, by, type="l",lty=1,legend,label
     roi <- rev(roi)
   }
   
+  #Local wrappers to ease optional argument forwarding
+  lmatplot <- function(...,fill,border,angle,density,bty,bg
+                       ,box.lwd,box.lty,box.col,pt.bg,pt.cex,pt.lwd
+                       ,xjust,yjust,x.intersp,y.intersp,adj,text.width
+                       ,text.col,text.font,merge,trace
+                       ,plot,ncol,horiz,title,insert,xpd,title.col,title.adj
+                       ,title.cex,title.font,seg.len){
+    matplot(...)
+  }
+  llegend <- function(...,adj,ann,cex.axis,cex.lab,cex.main,cex.sub
+                      ,col.axis,col.lab,col.main,col.sub,crt,err,family,fg,font
+                      ,font.axis,font.lab,front.main,font.sub,lab,las,lend,ljoin
+                      ,lmitre,mai,mar,mex,mgp,mkh,page,smo,srt,tck,xaxp,xaxs
+                      ,xaxt,xpd,yaxp,yaxs,yaxt
+                      ,type,main,sub,xlab,ylab,asp
+                      ,xlim,ylim,log,add,verbose
+                      ){
+    legend(...)
+  }
+    
+  
   if (missing(by)){
-    matplot(ppm,y,type=type,lty=lty,xlim=roi,col=palette,...)
+    lmatplot(x=ppm,y=y,type="l",xlim=roi,lty=lty,col=col,...)
     if (!missing(legend)){
       if (missing(label))
-        legend(legend,legend=1:dim(y)[2],text.col=palette)
+        llegend(x=legend,legend=1:dim(y)[2],col=col,...)
       else
-        legend(legend,legend=label[1:dim(y)[2]]
-               ,text.col=palette)
+        llegend(x=legend,legend=label[1:dim(y)[2]],lty=lty
+               ,col=col,...)
     }
     
   } 
@@ -233,48 +274,25 @@ smatplot <- function(ppm, y, roi, by, type="l",lty=1,legend,label
     r <- dim(y)[2] %% by
     for (j in 1:n){
       soi <- 1:by + by*(j-1)
-      matplot(ppm,y[,soi,drop=FALSE],type=type,lty=lty,col=palette,xlim=roi,...)
+      lmatplot(x=ppm,y=y[,soi,drop=FALSE],type="l",lty=lty,col=col,xlim=roi,...)
       if (!missing(legend)){
         if (missing(label))
-          legend(legend,legend=soi,text.col=palette)
+          llegend(x=legend,legend=soi,col=col,lty=lty,...)
         else
-          legend(legend,legend=label[soi]
-                 ,text.col=palette)
+          llegend(x=legend,legend=label[soi],col=col,lty=lty,...)
       }
     } 
     if (r>0){
       soi <- (by*n+1):(by*n+r)
-      matplot(ppm,y[,soi,drop=FALSE],type=type,lty=lty,col=palette,xlim=roi,...)
+      lmatplot(ppm,y[,soi,drop=FALSE],type="l",lty=lty,col=col,xlim=roi,...)
       if (!missing(legend)){
         if (missing(label))
-          legend(legend,legend=soi,text.col=palette)
+          llegend(x=legend,legend=soi,col=col,lty=lty,...)
         else
-          legend(legend,legend=label[soi],text.col=palette)
+          llegend(x=legend,legend=label[soi],col=col,lty=lty,...)
       }
     } 
   }
-}
-
-#' Calculate the domain of a \code{\linkS4class{NMRSignal1D}}
-#' 
-#' Estimates the domain of the signal as the coordinates of the outer peaks
-#'  offset by \emph{n} linewidths (strictly: \emph{n} times full-width at half-max)
-#' @param signal, \code{\linkS4class{NMRSignal1D}}
-#' @param n numeric, linewidth multiplier used to offset the outer peaks
-#' @returns numeric, the extremes of the signal's domain
-#' @import methods
-#' @importClassesFrom fusion NMRPeak1D
-#' @importClassesFrom fusion NMRSignal1D
-#' @export
-signalDomain <- function(signal, n=3){
-  if ("NMRSignal1D" %in% is(signal)){
-    offset <- signal@shape$params$fwhm * n * c(-1,1)
-    peaksRange <- range(sapply(signal@peaks, function(aPeak) aPeak@x))
-    return(peaksRange + offset)
-  }
-  cat(crayon::red("signalDomain >>"
-                  ,"Argument is not a S4 fusion::NMRSignal1D object"))
-  stop()
 }
 
 #' Normalize a \code{\linkS4class{NMRSignal1D}}
@@ -283,8 +301,8 @@ signalDomain <- function(signal, n=3){
 #' @param signal a \code{\linkS4class{NMRSignal1D}}
 #' @returns scaled \code{\linkS4class{NMRSignal1D}}
 #' @import methods
-#' @importClassesFrom fusion NMRPeak1D
-#' @importClassesFrom fusion NMRSignal1D
+#' @importClassesFrom nmr.peaks NMRPeak1D
+#' @importClassesFrom nmr.peaks NMRSignal1D
 #' @export
 normalizeSignal <- function(signal){
   summit <- max(sapply(signal@peaks,function(aPeak) aPeak@y))
@@ -296,52 +314,15 @@ normalizeSignal <- function(signal){
 }
 
 
-## Now should be impoted from nmr-peak-fitting#' Gaussian function
-#'
-#' Interpolates a gaussian with the given parameters on the given points.
-#' @param x numeric, points to be interpolated
-#' @param max numeric, maxima of the gaussian(s)
-#' @param mean numeric, mean(s) of the gaussian(s)
-#' @param fwhm numeric, full-width-at-half-max(s) of the gaussians(s)
-#' @returns numeric, vector of interpolated values
-#' @examples gaussian(1:100,max=1,mean=0)
-#' @export
-gaussian <- function(x,mean=0,max=1,fwhm=1){
-  max * exp(-4*log(2)*(((x - mean) / fwhm)^2))
-}
-
-#' Lorentzian function
-
-#' Interpolates a lorentzian with the given parameters on the given points.
-#' @param x numeric, points to be interpolated
-#' @param max numeric, maxima of the lorentzian(s)
-#' @param mean numeric, mean(s) of the lorentzian(s)
-#' @param fwhm numeric, full-width-at-half-max(s) of the lorentzians(s)
-#' @returns numeric, vector of interpolated values
-#' @examples lorentzian(1:20,max=1,mean=0)
-#' @export
-lorentzian <- function(x,mean=0,max=1,fwhm=1){
-  gamma2 <- fwhm/2
-  gamma2 <- gamma2^ 2
-  max * gamma2/((x - mean)^2 + gamma2)
-}
-
-#' Pseudo-Voigt function
-#'
-#' Interpolates a Voigt function, using the pseudo-Voigt approximation,
-#' on the given points with the given parameters.
-#'  The pseudo-Voigt approximation approximates a Voigt function as a linear
-#' combination of a lorentzian and a gaussian.
-#' @param x numeric points to be interpolated
-#' @param max numeric, maxima of the lorentzian(s)
-#' @param mean numeric, mean of the distribution
-#' @param fwhm numeric, full width at half max of the distribution
-#' @param mu numeric, <= 1. The mu parameter of the pseudo-Voigt approximation.
-#' The coefficients of the linear combination are mu for the lorentzian and
-#' 1 - mu for the gaussian
-#' @returns numeric, vector of interpolated values
-#' @examples pseudoVoigt(1:100,max=1,mean=0,mu=0.8)
-#' @export
-pseudoVoigt <- function(x,mean=0,max=1,fwhm=1,mu=0){
-  (1 - mu) * gaussian(x, mean, max, fwhm) + mu * lorentzian(x, mean, max, fwhm)
-}
+#Now should be impoted from nmr.peaks
+# gaussian <- function(x,mean=0,max=1,fwhm=1){
+#   max * exp(-4*log(2)*(((x - mean) / fwhm)^2))
+# }
+# lorentzian <- function(x,mean=0,max=1,fwhm=1){
+#   gamma2 <- fwhm/2
+#   gamma2 <- gamma2^ 2
+#   max * gamma2/((x - mean)^2 + gamma2)
+# }
+# pseudoVoigt <- function(x,mean=0,max=1,fwhm=1,mu=0){
+#   (1 - mu) * gaussian(x, mean, max, fwhm) + mu * lorentzian(x, mean, max, fwhm)
+# }

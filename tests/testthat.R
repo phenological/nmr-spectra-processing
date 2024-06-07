@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/reference/test_package.html#special-files
 
 library(testthat)
-library(nmr.spectra.processing)
+# library(nmr.spectra.processing)
 
 test_check("nmr.spectra.processing")

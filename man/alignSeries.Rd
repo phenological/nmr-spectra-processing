@@ -48,7 +48,6 @@ for details. Default: last 1/15th points.}
 \value{
 either a numeric vector of shifts or a matrix with the shifted series
 in its rows
-@import methods
 }
 \description{
 Invokes \code{\link[stats]{ccf}} to compute the cross-correlations

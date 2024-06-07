@@ -9,15 +9,14 @@ smatplot(
   y,
   roi,
   by,
-  type = "l",
   lty = 1,
   legend,
   label,
   reverse = TRUE,
   resolution = c("full", "dev", ifelse(length(as.matrix(y)) > 1200000, "dev", "full"))[3],
   reduce,
-  palette = c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33",
-    "#A65628", "#F781BF", "#999999"),
+  col = c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33", "#A65628",
+    "#F781BF", "#999999"),
   ...
 )
 }
@@ -32,14 +31,14 @@ Defaults to the range of \code{ppm}.}
 
 \item{by}{numeric, optional, number of spectra to be overlayed on each plot}
 
-\item{type}{optional, defaults to "l" (lines), default recommended for speed}
-
-\item{lty}{optional, defaults to 1 (continuous line)}
+\item{lty}{optional, line type, defaults to 1 (continuous line). Note that this
+parameter is passed both to \code{\link[graphics]{matplot}} and \code{\link[graphics]{legend}},
+so you always get lines in your legend (see ... below)}
 
 \item{legend, }{optional, position of the legend as specified in
 \code{\link[graphics]{legend}}}
 
-\item{label, }{character, optional, series labels}
+\item{label, }{character, optional, series labels for the legend}
 
 \item{reverse}{logic, optional, if TRUE (default) the x scale of the plot
 increases from right to left as it's customary in NMR spectroscopy}
@@ -51,16 +50,35 @@ size. See Details.}
 
 \item{reduce, }{function used to compute bin values. See Details}
 
-\item{palette}{vector of colors, equivalent to matplot(col). The default is
-Set1 copied from RColorBrewer}
+\item{col}{vector of series colors. The default is Set1 copied from
+RColorBrewer.}
 
-\item{..., }{additional arguments to be passed to \code{\link[graphics]{matplot}}}
+\item{..., }{additional arguments for customization. These arguments are
+passed either to \code{\link[graphics]{matplot}} for plot customization, or
+to  \code{\link[graphics]{legend}} for legend customization. Beware that some
+of these parameters are shared, such as \code{ltw} and the non-optional
+parameters \code{lty} and \code{col}. This means, for instance, that it is
+not possible to get a legend without lines or to unmatch legend linewidths
+from the plot's.}
 }
 \description{
 Wrapper to \code{\link[graphics]{matplot}} for plotting spectra. Crude
 compared to \code{ggplot2} but faster.
 }
 \details{
+tl;dr: For spectra with less than ~1.2 million points the default method
+renders fast and exact plots. Otherwise:
+\itemize{
+\item the default method adds a quick pre-processing step to make the plot fast
+to render, at the cost of inaccurate peak heights
+\item \code{resolution="dev", reduce=max} pre-processes slower, renders as fast
+and gives accurate peak heights, but introduces ppm inaccuracies visible when
+zooming in
+\item \code{resolution="full"} is exact but very slow to render.
+}
+
+Further details follow.
+
 When working with high resolution spectra it is likely that the resolution
 of the spectrum is higher than the pixel resolution of the graphic device,
 which places unnecessary burden on the renderer. By default \code{smatplot}
@@ -72,18 +90,18 @@ respectively.
 
 By default, bin values are computed by sampling each spectrum at regular
 intervals. This method is fast, which is good for the visualization of large
-datasets, but it is inaccurate in the intensity coordinate. Alternatively,
-the user may pass a function to \code{reduce} that will be used to compute the
-bins. In this case, each spectrum is partitioned with  \code{\link[base]{split}}
-and the \code{reduce} function is applied to compute each bin's intensity value
-and ppm. Beware that this may lead to inaccuracies in the frequency coordinate
-that become apparent if you enhance the resolution of the graphic device while
-the plot is in view. From experience, \code{reduce=max} produces the most
-accurate picture of spectra peak intensities, while \code{reduce=mean} or
-\code{median} provide a good compromise between accurate intensities and ppm.
-Either of the three should be equally accurate on the frequency scale
-as long as the pixel resolution is not enhanced after plotting.
-
-Keep in mind that the custom \code{reduce} plot may be slower to compute
-but it will render faster.
+datasets, but it produces inaccurate estimates of peak height. Alternatively,
+the user may pass a function to the \code{reduce} parameter that will be used
+to compute the bins. In this case, each spectrum is partitioned with
+\code{\link[base]{split}} and the \code{reduce} function is applied to compute
+each bin's intensity value and ppm. Beware that this may lead to inaccuracies
+in the frequency coordinate that become apparent if you enhance the resolution
+of the graphic device while the plot is in view. From experience,
+\code{reduce=max} produces the most accurate picture of spectra peak
+intensities, while \code{reduce=mean} or \code{median} provide a compromise
+between accurate intensities and ppm. Either of the three should be equally
+accurate on the frequency scale as long as the pixel resolution is not
+enhanced after plotting. Using \code{reduce} adds a expensive pre-processing
+step that makes the plot slower to compute but the result renders much
+faster than \code{resolution="full"}.
 }

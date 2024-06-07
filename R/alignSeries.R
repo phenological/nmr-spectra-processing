@@ -28,7 +28,7 @@
 #' @param ... additional arguments to \code{\link[stats]{ccf}}
 #' @returns either a numeric vector of shifts or a matrix with the shifted series
 #'  in its rows
-#'  @import methods
+#  @import methods
 #' @importFrom stats ccf median
 #' @export
 alignSeries <- function(x, ref=c("median","mean","more options in documentation")[1]
