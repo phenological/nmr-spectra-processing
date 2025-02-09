@@ -9,14 +9,11 @@ Authors@R:
            role = c("aut"),
            email = "julien.wist@murdoch.edu.au",
            comment = c(ORCID = "0000-0002-3416-2572")))
-Description: Collection of tools for processing Fourier-transformed NMR spectra:
- baseline correction, shifting, alignment, calibration to a reference resonance, 
- peak integration. Also packs some utils to help navigate NMR data without 
- leaving R.
+Description: Collection of tools for processing and navigating Fourier-transformed NMR spectra
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

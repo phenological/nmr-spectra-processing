@@ -2,15 +2,15 @@
 #' 
 #' Quality of life function to spare you a few uncomfortable key strokes and
 #'  some neural pulses. Questionable value.
-#' @param ppm numeric, chemical shift scale e.g. ppm
-#' @param roi numeric, optional. Upper and lower limit of the Region of Interest
+#' @param ppm numeric, chemical shift scale
+#' @param roi numeric, optional. Upper and lower limit of the region of interest
 #'  to be cropped.
-#' @param start, numeric, optional. Lower limit of the \code{roi}.
-#' @param end, numeric, optional. Upper limit of the \code{roi}.
+#' @param start, numeric, optional. Lower limit of the region of interest.
+#' @param end, numeric, optional. Upper limit of the region of interest.
 #' @details Either \code{start}, \code{end} or \code{roi} is required. Argument 
 #' \code{roi} has priority. If \code{start} is given but not \code{end}, the 
-#' lower limit is effectively set to \code{min(ppm)}. If \code{end} is given but
-#'  not \code{start}, the upper limit is effectively set to \code{max(ppm)}.
+#' upper limit is effectively set to \code{max(ppm)}. If \code{end} is given but
+#'  not \code{start}, the lower limit is effectively set to \code{min(ppm)}.
 #' @returns logic, a filter for the elements of \code{ppm} within the \code{roi}.
 #' @export
 crop <- function(ppm,start=-Inf,end=Inf,roi){
@@ -21,13 +21,12 @@ crop <- function(ppm,start=-Inf,end=Inf,roi){
 
 #' Get the index of a chemical shift
 #' 
-#' Seeks the element of the chemical shift scale closest to the given value.
-#' Useful e.g. to get the approximate intensity of spectra at a given c. shift.
-#' Quality of life function to save you a few key strokes and some neural pulses.
-#' Questionable value.
+#' Quality of life function to spare you a few key strokes and some neural pulses.
 #' @param ppm, numeric, chemical shift scale
-#' @param ..., numeric, chemical shift values to be found
-#' @returns integer, the index of the element of ppm that is closest to v
+#' @param ..., numeric, query chemical shift values
+#' @details Seeks the element(s) of the chemical shift scale closest to the given value(s).
+#' Useful e.g. to get the approximate intensity of spectra at a given c. shift.
+#' @returns integer, the indices of the elements of ppm that are closest to the queried values
 #' @export
 getI <- function(ppm,...){
   sapply(c(...),function(v) which.min(abs(ppm-v)))
@@ -36,22 +35,22 @@ getI <- function(ppm,...){
 #' Get the \emph{n} spectra with the highest intensity on the given chemical shift
 #' range or value
 #' 
-#' @param ppm, numeric, spectra chemical shift scale.
+#' @param ppm, numeric, chemical shift scale.
 #' @param Y, matrix, numeric, intensities, spectra in rows.
-#' @param cshift, numeric, optional, chemical shift value to be maximized.
+#' @param cshift, numeric, optional, query chemical shift value.
 #' @param n, integer, number of spectra to be returned, 10 by default.
-#' @param roi, numeric, optional, length 2 vector with the limits of the chemical
-#'  shift range to be maximized.
+#' @param roi, numeric, optional, length 2 vector with the limits of the query
+#' chemical shift range.
 #' @param bottom, logic, if TRUE returns the \code{n} spectra with the \emph{lowest}
 #' intensity instead.
-#' @param index, logic, whether to return the row indices of top spectra (TRUE)
-#' or the spectra themselves (FALSE, default).
+#' @param index, logic, determnies whether to return the row indices of top
+#'  spectra (TRUE) or the spectra themselves (FALSE, default).
 #' @details If both a precise chemical shift and a chemical shift range are 
 #' passed, \code{cshift} takes priority
-#' @returns If index is TRUE, returns a vector with the row indices of the spectra
-#'  with the highest (or lowest, if \code{bottom}) intensity at the given 
-#'  \code{cshift} or  within the given \code{roi}. Otherwise (default) returns a
-#'   matrix with the corresponding spectra.
+#' @returns If index is TRUE, returns a vector with the row indices of the
+#' \emph{n} spectra with the highest (lowest if \code{bottom}) intensity at
+#'  the given \code{cshift} or  within the given \code{roi}. Otherwise (default)
+#'  returns a matrix with the corresponding spectra.
 #' @export
 top <- function(ppm,Y,cshift,n=10L,roi=c(-Inf,Inf),bottom=FALSE,index=FALSE){
   if (!is.numeric(ppm)){
@@ -88,6 +87,10 @@ top <- function(ppm,Y,cshift,n=10L,roi=c(-Inf,Inf),bottom=FALSE,index=FALSE){
 #' 
 #' Wrapper to \code{\link[graphics]{matplot}} for plotting spectra. Crude 
 #' compared to \code{ggplot2} but faster.
+#' This is similar to \code{\link[graphics]{matplot}} with \code{interactive==FALSE}
+#' but uses a slightly different interface, allows to split spectra in multiple
+#' plots, handles \code{...} parameters more accurately, implements a more
+#' advanced \code{resolution} system, etc.
 #' 
 #' @param ppm numeric, spectra ppm scale
 #' @param y numeric vector or matrix, nmr intensities, spectra in rows. If neither
@@ -105,11 +108,11 @@ top <- function(ppm,Y,cshift,n=10L,roi=c(-Inf,Inf),bottom=FALSE,index=FALSE){
 #' increases from right to left as it's customary in NMR spectroscopy
 #' @param resolution, character. If "full" all data are passed to 
 #' \code{\link[graphics]{matplot}}. If "dev", data are binned to fit the graphic
-#'  device's resolution. By default\code{smatplot} chooses according to data 
-#'  size. See Details.
+#'  device's resolution before plotting. By default \code{smatplot} chooses
+#'  according to data size. See Details.
 #' @param reduce, function used to compute bin values. See Details
-#' @param col vector of series colors. The default is Set1 copied from 
-#' RColorBrewer. 
+#' @param col vector of series colors. The default is \emph{Set1} copied from 
+#' \code{\link[RColorBrewer]{RColorBrewer}}. 
 #' @param ..., additional arguments for customization. These arguments are
 #' passed either to \code{\link[graphics]{matplot}} for plot customization, or
 #' to  \code{\link[graphics]{legend}} for legend customization. Beware that some
@@ -132,7 +135,7 @@ top <- function(ppm,Y,cshift,n=10L,roi=c(-Inf,Inf),bottom=FALSE,index=FALSE){
 #' 
 #' When working with high resolution spectra it is likely that the resolution
 #' of the spectrum is higher than the pixel resolution of the graphic device,
-#' which places unnecessary burden on the renderer. By default \code{smatplot}
+#' which places an unnecessary burden on the renderer. By default \code{smatplot}
 #' bins the spectra matrix to match the pixel resolution of the active graphic 
 #' device (as reported by \code{\link[grDevices]{dev.size}}) if the input spectra
 #' contain more than 1.2 million points total. The user can force full resolution
@@ -145,16 +148,16 @@ top <- function(ppm,Y,cshift,n=10L,roi=c(-Inf,Inf),bottom=FALSE,index=FALSE){
 #' the user may pass a function to the \code{reduce} parameter that will be used 
 #' to compute the bins. In this case, each spectrum is partitioned with 
 #' \code{\link[base]{split}} and the \code{reduce} function is applied to compute 
-#' each bin's intensity value and ppm. Beware that this may lead to inaccuracies 
-#' in the frequency coordinate that become apparent if you enhance the resolution
-#' of the graphic device while the plot is in view. From experience, 
-#' \code{reduce=max} produces the most accurate picture of spectra peak 
-#' intensities, while \code{reduce=mean} or \code{median} provide a compromise 
-#' between accurate intensities and ppm. Either of the three should be equally 
-#' accurate on the frequency scale as long as the pixel resolution is not 
-#' enhanced after plotting. Using \code{reduce} adds a expensive pre-processing
+#' each bin's intensity value and ppm. This adds a expensive pre-processing
 #' step that makes the plot slower to compute but the result renders much 
-#' faster than \code{resolution="full"}. 
+#' faster than \code{resolution="full"}. Beware that spectra rendered in this manner
+#' are chemical shift-accurate only up to the current graphic resolution.
+#' This means that inaccuracies in the frequency coordinate may appear
+#' if you enhance the resolution of the graphic device after plotting e.g. by
+#' enlarging the plot window in RStudio.
+#' From experience,\code{reduce=max} produces the most accurate picture of peak 
+#' intensities, while \code{reduce=mean} or \code{median} provide a compromise 
+#' between intensity and chemical shift accuracy.
 #' 
 #' @importFrom graphics matplot
 #' @importFrom grDevices dev.size
@@ -181,6 +184,7 @@ smatplot <- function(ppm, y, roi, by,lty=1,legend,label
   if (is.matrix(y)) y <- t(y) else y <- as.matrix(y)
   #roi filter
   if (!missing(roi)){
+    roi <- sort(roi)
     fi <- ppm >= roi[1] & ppm <= roi[2]
     ppm <- ppm[fi]
     y <- y[fi,,drop=FALSE]
@@ -252,7 +256,7 @@ smatplot <- function(ppm, y, roi, by,lty=1,legend,label
                       ,lmitre,mai,mar,mex,mgp,mkh,page,smo,srt,tck,xaxp,xaxs
                       ,xaxt,xpd,yaxp,yaxs,yaxt
                       ,type,main,sub,xlab,ylab,asp
-                      ,xlim,ylim,log,add,verbose
+                      ,xlim,ylim,log,add,verbose,frame
                       ){
     legend(...)
   }
