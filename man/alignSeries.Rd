@@ -20,13 +20,15 @@ alignSeries(
 \item{ref}{logical, character, numeric or function. Specifies the reference
 series for alignment. It is interpreted according to type:\itemize{
 \item Numeric vector of the same length as the input series: literal reference
-\item A number \code{<= dim(x)[1]}: row index of the reference series
+series
+\item A number \code{<= dim(x)[1]}: row index of the input series to be used
+as reference
 \item logical of length \code{== dim(x)[2])}: logical filter that selects a
 single row of \code{x} to be used as reference
 \item function: the function is called with \code{x} as argument, the
 returned value is used as reference
-\item character: "median" (default) or "mean", use the median ir mean series
-as reference.}}
+\item character: "median" (default) or "mean", use the median or mean of the
+input series as reference.}}
 
 \item{threshold}{numeric, the cross-correlation must be above this
 threshold for the series to be aligned, otherwise it is left unshifted.

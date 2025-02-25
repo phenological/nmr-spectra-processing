@@ -9,14 +9,15 @@ getI(ppm, ...)
 \arguments{
 \item{ppm, }{numeric, chemical shift scale}
 
-\item{..., }{numeric, chemical shift values to be found}
+\item{..., }{numeric, query chemical shift values}
 }
 \value{
-integer, the index of the element of ppm that is closest to v
+integer, the indices of the elements of ppm that are closest to the queried values
 }
 \description{
-Seeks the element of the chemical shift scale closest to the given value.
+Quality of life function to spare you a few key strokes and some neural pulses.
+}
+\details{
+Seeks the element(s) of the chemical shift scale closest to the given value(s).
 Useful e.g. to get the approximate intensity of spectra at a given c. shift.
-Quality of life function to save you a few key strokes and some neural pulses.
-Questionable value.
 }

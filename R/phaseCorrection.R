@@ -1,11 +1,11 @@
 #' Apply a phase correction to a complex NMR spectrum. phi1 is specified at index=0
 #' 
-#' @param yr list, Spectrum Real part
-#' @param yi list, Spectrum Imaginary part
-#' @param phi0 numeric, Phase 0 order correction.
-#' @param phi1 numeric, Phase 1 order correction.
-#' @param phi1 numeric, Phase 1 order correction.
-#' @param reverse bool, Is the spectrum x-reversed(default=FALSE)
+#' @param yr list, spectrum intensities, real part
+#' @param yi list, spectrum intensities, imaginary part
+#' @param phi0 numeric, phase 0 order correction.
+#' @param phi1 numeric, phase 1 order correction.
+#' @param reverse boolean, TRUE if the chemical shift scale is inverted 
+#' (decreases from left to right). Default=FALSE
 #' @returns list, A list with 2 elements corresponding to the corrected spectrum (yr, yi)
 #' @export
 phaseCorrection <- function(yr, yi, phi0, phi1, reverse=FALSE) {

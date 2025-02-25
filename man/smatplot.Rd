@@ -45,13 +45,13 @@ increases from right to left as it's customary in NMR spectroscopy}
 
 \item{resolution, }{character. If "full" all data are passed to
 \code{\link[graphics]{matplot}}. If "dev", data are binned to fit the graphic
-device's resolution. By default\code{smatplot} chooses according to data
-size. See Details.}
+device's resolution before plotting. By default \code{smatplot} chooses
+according to data size. See Details.}
 
 \item{reduce, }{function used to compute bin values. See Details}
 
-\item{col}{vector of series colors. The default is Set1 copied from
-RColorBrewer.}
+\item{col}{vector of series colors. The default is \emph{Set1} copied from
+\code{\link[RColorBrewer]{RColorBrewer}}.}
 
 \item{..., }{additional arguments for customization. These arguments are
 passed either to \code{\link[graphics]{matplot}} for plot customization, or
@@ -64,6 +64,10 @@ from the plot's.}
 \description{
 Wrapper to \code{\link[graphics]{matplot}} for plotting spectra. Crude
 compared to \code{ggplot2} but faster.
+This is similar to \code{\link[graphics]{matplot}} with \code{interactive==FALSE}
+but uses a slightly different interface, allows to split spectra in multiple
+plots, handles \code{...} parameters more accurately, implements a more
+advanced \code{resolution} system, etc.
 }
 \details{
 tl;dr: For spectra with less than ~1.2 million points the default method
@@ -81,7 +85,7 @@ Further details follow.
 
 When working with high resolution spectra it is likely that the resolution
 of the spectrum is higher than the pixel resolution of the graphic device,
-which places unnecessary burden on the renderer. By default \code{smatplot}
+which places an unnecessary burden on the renderer. By default \code{smatplot}
 bins the spectra matrix to match the pixel resolution of the active graphic
 device (as reported by \code{\link[grDevices]{dev.size}}) if the input spectra
 contain more than 1.2 million points total. The user can force full resolution
@@ -94,14 +98,14 @@ datasets, but it produces inaccurate estimates of peak height. Alternatively,
 the user may pass a function to the \code{reduce} parameter that will be used
 to compute the bins. In this case, each spectrum is partitioned with
 \code{\link[base]{split}} and the \code{reduce} function is applied to compute
-each bin's intensity value and ppm. Beware that this may lead to inaccuracies
-in the frequency coordinate that become apparent if you enhance the resolution
-of the graphic device while the plot is in view. From experience,
-\code{reduce=max} produces the most accurate picture of spectra peak
-intensities, while \code{reduce=mean} or \code{median} provide a compromise
-between accurate intensities and ppm. Either of the three should be equally
-accurate on the frequency scale as long as the pixel resolution is not
-enhanced after plotting. Using \code{reduce} adds a expensive pre-processing
+each bin's intensity value and ppm. This adds a expensive pre-processing
 step that makes the plot slower to compute but the result renders much
-faster than \code{resolution="full"}.
+faster than \code{resolution="full"}. Beware that spectra rendered in this manner
+are chemical shift-accurate only up to the current graphic resolution.
+This means that inaccuracies in the frequency coordinate may appear
+if you enhance the resolution of the graphic device after plotting e.g. by
+enlarging the plot window in RStudio.
+From experience,\code{reduce=max} produces the most accurate picture of peak
+intensities, while \code{reduce=mean} or \code{median} provide a compromise
+between intensity and chemical shift accuracy.
 }

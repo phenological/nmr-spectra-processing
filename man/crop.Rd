@@ -7,13 +7,13 @@
 crop(ppm, start = -Inf, end = Inf, roi)
 }
 \arguments{
-\item{ppm}{numeric, chemical shift scale e.g. ppm}
+\item{ppm}{numeric, chemical shift scale}
 
-\item{start, }{numeric, optional. Lower limit of the \code{roi}.}
+\item{start, }{numeric, optional. Lower limit of the region of interest.}
 
-\item{end, }{numeric, optional. Upper limit of the \code{roi}.}
+\item{end, }{numeric, optional. Upper limit of the region of interest.}
 
-\item{roi}{numeric, optional. Upper and lower limit of the Region of Interest
+\item{roi}{numeric, optional. Upper and lower limit of the region of interest
 to be cropped.}
 }
 \value{
@@ -26,6 +26,6 @@ some neural pulses. Questionable value.
 \details{
 Either \code{start}, \code{end} or \code{roi} is required. Argument
 \code{roi} has priority. If \code{start} is given but not \code{end}, the
-lower limit is effectively set to \code{min(ppm)}. If \code{end} is given but
-not \code{start}, the upper limit is effectively set to \code{max(ppm)}.
+upper limit is effectively set to \code{max(ppm)}. If \code{end} is given but
+not \code{start}, the lower limit is effectively set to \code{min(ppm)}.
 }

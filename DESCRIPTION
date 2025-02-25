@@ -9,7 +9,7 @@ Authors@R:
            role = c("aut"),
            email = "julien.wist@murdoch.edu.au",
            comment = c(ORCID = "0000-0002-3416-2572")))
-Description: Collection of tools for processing and navigating Fourier-transformed NMR spectra
+Description: Collection of tools for processing and navigating Fourier-transformed NMR spectra.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -22,7 +22,6 @@ Imports:
     ptw,
     methods,
     nmr.peaks,
-    gsignal,
     signal
 Remotes: github::phenological/nmr-peaks
 Depends: 

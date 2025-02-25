@@ -18,14 +18,14 @@
 #' @param add, logic, should the annotation be added to the active plot (TRUE) or a
 #' new plot created (FALSE)? This is useful to manually position each individual label
 #' for optimal visualization. Default FALSE.
-#' @param adj, numeric, positioning of labels, see \code{\link[base]{par}}
+#' @param adj, numeric, positioning of labels, see \code{\link[graphics]{par}}
 #' @param delta, horizontal shift, in chemical shift units, of the text labels relative
 #'  to the peak positions
 #' @param epsilon, numeric, scaling factor for marker length, scales it
 #' proportionally to the plot window. More precisetly, this controls the vertical
 #' spacing between the top peak and the text label, so the actual length
 #' of the marker depends on other factors such as `delta` positioning. Default 0.02 
-#' @param ... additional graphical parameters, see \code{\link[base]{par}}, 
+#' @param ... additional graphical parameters, see \code{\link[graphics]{par}}, 
 #' see \code{\link{smatplot}}.
 #' @details Annotations are re positioned to the nearest maximum intensity within
 #' + - \code{window} of the given chemical shifts. You may compare the default
@@ -34,8 +34,10 @@
 #' \code{add=TRUE}. For a similar reason, you should pass the original
 #'  \code{ylim} to further calls using \code{add=TRUE}. 
 #' Line style parameters such as lty and lwd will be inherited by both spectrum
-#' and annotation markers.
-#' @returns 
+#' and annotation marker.
+#' @returns NULL
+#' 
+#' @importFrom graphics lines text
 #' @export
 sannotate <- function(ppm,y,ann,roi,tcol="black",lcol="black",window=0.002
                       ,ylim="auto",add=FALSE,adj=c(0.5,-0.5)

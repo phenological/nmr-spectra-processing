@@ -8,28 +8,28 @@ range or value}
 top(ppm, Y, cshift, n = 10L, roi = c(-Inf, Inf), bottom = FALSE, index = FALSE)
 }
 \arguments{
-\item{ppm, }{numeric, spectra chemical shift scale.}
+\item{ppm, }{numeric, chemical shift scale.}
 
 \item{Y, }{matrix, numeric, intensities, spectra in rows.}
 
-\item{cshift, }{numeric, optional, chemical shift value to be maximized.}
+\item{cshift, }{numeric, optional, query chemical shift value.}
 
 \item{n, }{integer, number of spectra to be returned, 10 by default.}
 
-\item{roi, }{numeric, optional, length 2 vector with the limits of the chemical
-shift range to be maximized.}
+\item{roi, }{numeric, optional, length 2 vector with the limits of the query
+chemical shift range.}
 
 \item{bottom, }{logic, if TRUE returns the \code{n} spectra with the \emph{lowest}
 intensity instead.}
 
-\item{index, }{logic, whether to return the row indices of top spectra (TRUE)
-or the spectra themselves (FALSE, default).}
+\item{index, }{logic, determnies whether to return the row indices of top
+spectra (TRUE) or the spectra themselves (FALSE, default).}
 }
 \value{
-If index is TRUE, returns a vector with the row indices of the spectra
-with the highest (or lowest, if \code{bottom}) intensity at the given
-\code{cshift} or  within the given \code{roi}. Otherwise (default) returns a
-matrix with the corresponding spectra.
+If index is TRUE, returns a vector with the row indices of the
+\emph{n} spectra with the highest (lowest if \code{bottom}) intensity at
+the given \code{cshift} or  within the given \code{roi}. Otherwise (default)
+returns a matrix with the corresponding spectra.
 }
 \description{
 Get the \emph{n} spectra with the highest intensity on the given chemical shift
