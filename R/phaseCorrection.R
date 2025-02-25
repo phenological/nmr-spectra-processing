@@ -5,10 +5,10 @@
 #' @param phi0 numeric, Phase 0 order correction.
 #' @param phi1 numeric, Phase 1 order correction.
 #' @param phi1 numeric, Phase 1 order correction.
-#' @param reverse bool, Is the spectrum x-reversed(default=TRUE)
+#' @param reverse bool, Is the spectrum x-reversed(default=FALSE)
 #' @returns list, A list with 2 elements corresponding to the corrected spectrum (yr, yi)
 #' @export
-phaseCorrection <- function(yr, yi, phi0, phi1, reverse=TRUE) {
+phaseCorrection <- function(yr, yi, phi0, phi1, reverse=FALSE) {
   phi0 <- phi0 * pi / 180
   phi1 <- phi1 * pi / 180
   
@@ -16,7 +16,7 @@ phaseCorrection <- function(yr, yi, phi0, phi1, reverse=TRUE) {
   delta <- phi1 / lng
   firstAngle <- phi0
   
-  if (reverse) {
+  if (!reverse) {
     delta <- -delta;
     firstAngle <- firstAngle + phi1;
   }
