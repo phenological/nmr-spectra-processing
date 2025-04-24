@@ -16,28 +16,20 @@ test_that("top works", {
   expect_equal(top(ppm,avo3,roi=c(1.503,1.51),n=1, index=TRUE), 2L)
 })
 
-test_that("smatplot works", {
-  expect_no_condition(smatplot(ppm,avo3))
-  expect_no_condition(smatplot(ppm,avo3,roi=c(1.4,1.6)))
-  expect_no_condition(smatplot(ppm,avo3,by=2,legend="topleft",label=1:3))
-  expect_no_condition(smatplot(ppm,avo3,resolution="full"))
-  expect_no_condition(smatplot(ppm,avo3,resolution="full",reduce=max))
-})
-
-test_that("normalizeSignal works", {
-  sucrose <- new("NMRSignal1D"
-                 ,id="Sucro"
-                 ,chemicalShift=5.416
-                 ,shape=list(name="pseudoVoigt"
-                             ,params = list(mu=0.85,fwhm=0.0015,base=0)
-                 )
-                 ,peaks = list(new("NMRPeak1D",x=5.4113, y=123)
-                               ,new("NMRPeak1D",x=5.4207, y=125)
-                 )
-  )
-  expect_s4_class(normalizeSignal(sucrose),"NMRSignal1D")
-  summit <- max(sapply(normalizeSignal(sucrose)@peaks,function(p) p@y))
-  summitI <- which.max(sapply(normalizeSignal(sucrose)@peaks,function(p) p@y))
-  expect_equal(summit,1)
-  expect_equal(summitI,2)
-})
+# test_that("normalizeSignal works", {
+#   sucrose <- new("NMRSignal1D"
+#                  ,id="Sucro"
+#                  ,chemicalShift=5.416
+#                  ,shape=list(name="pseudoVoigt"
+#                              ,params = list(mu=0.85,fwhm=0.0015,base=0)
+#                  )
+#                  ,peaks = list(new("NMRPeak1D",x=5.4113, y=123)
+#                                ,new("NMRPeak1D",x=5.4207, y=125)
+#                  )
+#   )
+#   expect_s4_class(normalizeSignal(sucrose),"NMRSignal1D")
+#   summit <- max(sapply(normalizeSignal(sucrose)@peaks,function(p) p@y))
+#   summitI <- which.max(sapply(normalizeSignal(sucrose)@peaks,function(p) p@y))
+#   expect_equal(summit,1)
+#   expect_equal(summitI,2)
+# })

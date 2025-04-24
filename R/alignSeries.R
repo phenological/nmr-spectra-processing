@@ -73,7 +73,7 @@ alignSeries <- function(x, ref=c("median","mean","more options in documentation"
     }
     if (!is.numeric(ref)){
       cat(crayon::yellow("nmr.spectra.processing:alignSeries >>"
-                         ,"Exoected numeric reference\n"
+                         ,"Expected numeric reference\n"
                          ,"Non-numeric argument ref being cast as.numeric\n"
                          ,"Unpredictable results may follow if casting to"
                          ,"numeric vector fails\n"))

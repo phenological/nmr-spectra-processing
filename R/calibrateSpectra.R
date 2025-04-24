@@ -25,7 +25,7 @@
 #' align with the reference spectrum
 #' @importClassesFrom nmr.peaks NMRPeak1D
 #' @importClassesFrom nmr.peaks NMRSignal1D
-#' @importFrom nmr.peaks signalDomain
+#' @importFrom nmr.peaks signalDomain scaleSignal
 #' @importFrom stats ccf
 #' @export
 calibrateSignal <- function(ppm,y,signal
@@ -98,6 +98,7 @@ calibrateSignal <- function(ppm,y,signal
 #' @importFrom methods is new
 #' @importClassesFrom nmr.peaks NMRPeak1D
 #' @importClassesFrom nmr.peaks NMRSignal1D
+#' @importFrom nmr.peaks signalDomain scaleSignal
 #' @import nmr.peaks
 #' @export
 calibrateSpectra <- function(ppm, Y,ref=c("tsp","glucose","alanine","serum"
@@ -246,6 +247,6 @@ calibrateToSignal <- function(ppm, Y, signal, rOref=signalDomain(signal,30)
     Y <-  baselineCorrection(Y,lambda=lambda)
     normS <- Y / max(Y)
   }
-  alignSeries(normS, signalToY(normalizeSignal(signal),ppm),shift=FALSE
+  alignSeries(normS, signalToY(nmr.peaks::scaleSignal(signal,to=1),ppm),shift=FALSE
               ,lag.max=length(ppm) * maxShift, threshold=threshold, ...)
 }
