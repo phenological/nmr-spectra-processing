@@ -49,7 +49,7 @@ This small dataset consists of sixty-one 600 MHZ $^1$H-NMR spectra of rat urine 
 
 
 ```{r eval=FALSE}
-# library(nmr.spectra.processing)
+library(nmr.spectra.processing)
 devtools::load_all("~/git/phenological/nmr-spectra-processing")
 nmrium(ppm,X,cache="~/nmrium",metadata = data.frame(group=Y))
 #don't run
