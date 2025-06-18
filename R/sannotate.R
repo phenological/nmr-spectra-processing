@@ -3,9 +3,8 @@
 #' Plots a spectrum with signals labeled
 #' @param ppm numeric, chemical shift scale
 #' @param y numeric, NMR intensities
-#' @param ann list, signals to annotate. Each list element is a numeric vector
-#' with the ppm coordinates of the signal's peaks. Signal labels are to be passed
-#' as the list's names
+#' @param annotations list, text annotations. Can be expressions.
+#' @param peaks list, coordinates of the peaks associated with each annotation
 #' @param roi numeric, optional. Upper and lower limit of the Region of Interest
 #' to be plotted
 #' @param tcol, text color for annotation
@@ -27,6 +26,7 @@
 #' proportionally to the plot window. More precisetly, this controls the vertical
 #' spacing between the top peak and the text label, so the actual length
 #' of the marker depends on other factors such as `delta` positioning. Default 0.02 
+#' @param marker, character, style of the annotation marker. Default: "trinket"
 #' @param ... additional graphical parameters, see \code{\link[graphics]{par}}, 
 #' see \code{\link{smatplot}}.
 #' @details Annotations are re positioned to the nearest maximum intensity within
@@ -39,14 +39,24 @@
 #' 
 #' @importFrom graphics lines text
 #' @export
-sannotate <- function(ppm,y,ann,roi,tcol="black",lcol="black",window=0.002
+sannotate <- function(ppm,y,annotations,peaks,roi,tcol="black",lcol="black",window=0.002
                       ,ylim="auto",add=FALSE,adj=c(0.5,-0.5)
-                      ,delta=0,epsilon=0.02,...){
+                      ,delta=0,epsilon=0.02,marker=c("trinket","range")[1],...){
+  #qc
+  m <- length(annotations)
+  if (m != length(peaks)){
+    cat(crayon::red("nmr.spectra.processing::sannotate>>"
+                    ,"length of peaks and annotations lists must match\\n"))
+  }
+  
   #Local wrappers to ease optional argument forwarding
-  llines <- function(...,roi, by, lty, legend, label, reverse, pos
+  llines <- function(...,lcol,col,roi, by, lty, legend, label, reverse, pos
                      ,resolution, reduce,adj, offset, vfont,font
                      ,xlim,ylim){
-    lines(...)
+    lines(...,col=lcol)
+  }
+  ltext <- function(...,tcol,col){
+    text(...,col=tcol)
   }
   lsmatplot <- function(...,add,adj,offset,vfont,font, pos){
     smatplot(...)
@@ -61,10 +71,10 @@ sannotate <- function(ppm,y,ann,roi,tcol="black",lcol="black",window=0.002
   ppm <- ppm[fi]
   y <- y[fi]
   
-  m <- length(ann)
+  # m <- length(annotations)
   #Adjust peak coordinates to nearest maxima within the window provided
   for (i in 1:m){
-    ann[[i]] <- sapply(ann[[i]], function(px){
+    peaks[[i]] <- sapply(peaks[[i]], function(px){
       # xi <- getI(ppm,px)
       xmin <- getI(ppm,px-window)
       xmax <- getI(ppm,px+window)
@@ -73,11 +83,16 @@ sannotate <- function(ppm,y,ann,roi,tcol="black",lcol="black",window=0.002
     })
   }
   #Signal center (named "means" for historical reasons)
-  sigXmeans <- sapply(ann,function(x) mean(range(x)))
+  sigXmeans <- sapply(peaks,function(x) mean(range(x)))
   #Signal maxima
-  sigYmaxs <-sapply(ann,function(x) max(y[getI(ppm,x)]))
-  #Signal labels
-  l <- names(ann)
+  if(marker == "range"){
+    sigYmaxs <- sapply(peaks, function(x) max(y[crop(ppm,roi=range(x))]))
+  } else{
+    sigYmaxs <-sapply(peaks, function(x) max(y[getI(ppm,x)]))
+  }
+  
+  # #Signal labels
+  # l <- names(ann)
   
   #Estimate ideal ymax to ensure annotation fits (unless ylim provided)
   if (ylim[1] == "auto"){
@@ -97,35 +112,55 @@ sannotate <- function(ppm,y,ann,roi,tcol="black",lcol="black",window=0.002
   #      ,xlab="ppm",ylab="")
   
   #Add labels to the annotation
-  text(x=sigXmeans + delta,y=sigYmaxs + 2*minLength + poffset,labels=l,col=tcol
+  ltext(x=sigXmeans + delta,y=sigYmaxs + 2*minLength + poffset,labels=annotations,tcol=tcol
        ,adj=adj,...)
   #Add markers
   for (i in 1:m){
-    ta <- ann[[i]]
-    #Trinkets for multiplets
-    if (length(ta) > 1){
-      ##Add horizontals
-      llines(range(ann[[i]]), rep(sigYmaxs[[i]] + minLength + poffset,2),col=lcol,...)
-      for (x in ta){
-        llines(rep(x,2),c(y[getI(ppm,x)] + poffset
-                          ,sigYmaxs[[i]] + minLength + poffset
-                          )
-               ,col=lcol,...
-               )
-      }
-      # llines(rep(mean(ta),2),c(sigYmaxs[[i]] + minLength + poffset
-      llines(c(sigXmeans[[i]],sigXmeans[[i]]+delta),c(sigYmaxs[[i]] + minLength + poffset
-                                          ,sigYmaxs[[i]] + 2 * minLength + poffset
-                                          )
-             , col=lcol,...
-             )
-    } else{
-      #For singlets, a single vertical
-      llines(c(ta,ta+delta),c(sigYmaxs[[i]] + poffset
-                              ,sigYmaxs[[i]] + 2 * minLength + poffset
+    ta <- peaks[[i]]
+    #"range" style
+    if (marker == "range"){
+      #Add horizontals
+      llines(range(ta), rep(sigYmaxs[[i]] + minLength + poffset,2),lcol=lcol,...)
+      #Add verticals
+      llines(rep(min(ta),2),c(sigYmaxs[[i]] + poffset #+ minLength/2
+                              ,sigYmaxs[[i]] + poffset + minLength*2#*3/2
                               )
-             ,col = lcol,...
+             ,lcol=lcol,...
              )
+      llines(rep(max(ta),2),c(sigYmaxs[[i]] + poffset #+ minLength/2
+                              ,sigYmaxs[[i]] + poffset + minLength*2#3/2
+      )
+      ,lcol=lcol,...
+      )
+    } else{
+      # "trinket" style
+      #Trinkets for mult > 1
+      if (length(ta) > 1){
+        ##Add horizontals
+        llines(range(ta), rep(sigYmaxs[[i]] + minLength + poffset,2),lcol=lcol,...)
+        ##Add branches
+        for (x in ta){
+          llines(rep(x,2),c(y[getI(ppm,x)] + poffset
+                            ,sigYmaxs[[i]] + minLength + poffset
+          )
+          ,lcol=lcol,...
+          )
+        }
+        ##Add trunk
+        # llines(rep(mean(ta),2),c(sigYmaxs[[i]] + minLength + poffset
+        llines(c(sigXmeans[[i]],sigXmeans[[i]]+delta),c(sigYmaxs[[i]] + minLength + poffset
+                                                        ,sigYmaxs[[i]] + 2 * minLength + poffset
+        )
+        , lcol=lcol,...
+        )
+      } else{
+        #For singlets, a single vertical
+        llines(c(ta,ta+delta),c(sigYmaxs[[i]] + poffset
+                                ,sigYmaxs[[i]] + 2 * minLength + poffset
+        )
+        ,lcol = lcol,...
+        )
+      }
     }
   }
 }
