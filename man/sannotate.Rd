@@ -45,7 +45,9 @@ as in \code{\link[base]{plot}}}
 
 \item{add, }{logic, should the annotation be added to the active plot (TRUE) or a
 new plot created (FALSE)? This is useful to manually position each individual label
-for optimal visualization. Default FALSE.}
+for optimal visualization, to pass different graphic parameters (e.g. lwd) for
+spectrum trace and for annotation, or to keep a cleaner code in extensive annotations.
+Default FALSE.}
 
 \item{adj, }{numeric, positioning of labels, see \code{\link[graphics]{par}}}
 
@@ -65,16 +67,9 @@ Plots a spectrum with signals labeled
 }
 \details{
 Annotations are re positioned to the nearest maximum intensity within
-\itemize{
-\item 
-\itemize{
-\item \code{window} of the given chemical shifts. You may compare the default
+\code{window} of the given chemical shifts. You may compare the default
 with  \code{window=0} to see the effect. Since annotations need the spectrum
 for adjustment, arguments \code{ppm} and \code{y} are mandatory even if
 \code{add=TRUE}. For a similar reason, you should pass the original
 \code{ylim} to further calls using \code{add=TRUE}.
-Line style parameters such as lty and lwd will be inherited by both spectrum
-and annotation marker.
-}
-}
 }

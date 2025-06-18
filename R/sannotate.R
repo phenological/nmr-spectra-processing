@@ -17,7 +17,9 @@
 #' as in \code{\link[base]{plot}}
 #' @param add, logic, should the annotation be added to the active plot (TRUE) or a
 #' new plot created (FALSE)? This is useful to manually position each individual label
-#' for optimal visualization. Default FALSE.
+#' for optimal visualization, to pass different graphic parameters (e.g. lwd) for
+#' spectrum trace and for annotation, or to keep a cleaner code in extensive annotations. 
+#' Default FALSE.
 #' @param adj, numeric, positioning of labels, see \code{\link[graphics]{par}}
 #' @param delta, horizontal shift, in chemical shift units, of the text labels relative
 #'  to the peak positions
@@ -28,13 +30,11 @@
 #' @param ... additional graphical parameters, see \code{\link[graphics]{par}}, 
 #' see \code{\link{smatplot}}.
 #' @details Annotations are re positioned to the nearest maximum intensity within
-#' + - \code{window} of the given chemical shifts. You may compare the default
+#' \code{window} of the given chemical shifts. You may compare the default
 #' with  \code{window=0} to see the effect. Since annotations need the spectrum
 #'  for adjustment, arguments \code{ppm} and \code{y} are mandatory even if
 #' \code{add=TRUE}. For a similar reason, you should pass the original
-#'  \code{ylim} to further calls using \code{add=TRUE}. 
-#' Line style parameters such as lty and lwd will be inherited by both spectrum
-#' and annotation marker.
+#'  \code{ylim} to further calls using \code{add=TRUE}.
 #' @returns NULL
 #' 
 #' @importFrom graphics lines text
