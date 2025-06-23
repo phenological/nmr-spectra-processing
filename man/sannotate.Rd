@@ -7,7 +7,8 @@
 sannotate(
   ppm,
   y,
-  ann,
+  annotations,
+  peaks,
   roi,
   tcol = "black",
   lcol = "black",
@@ -17,6 +18,7 @@ sannotate(
   adj = c(0.5, -0.5),
   delta = 0,
   epsilon = 0.02,
+  marker = c("trinket", "range")[1],
   ...
 )
 }
@@ -25,9 +27,9 @@ sannotate(
 
 \item{y}{numeric, NMR intensities}
 
-\item{ann}{list, signals to annotate. Each list element is a numeric vector
-with the ppm coordinates of the signal's peaks. Signal labels are to be passed
-as the list's names}
+\item{annotations}{list, text annotations. Can be expressions.}
+
+\item{peaks}{list, coordinates of the peaks associated with each annotation}
 
 \item{roi}{numeric, optional. Upper and lower limit of the Region of Interest
 to be plotted}
@@ -58,6 +60,8 @@ to the peak positions}
 proportionally to the plot window. More precisetly, this controls the vertical
 spacing between the top peak and the text label, so the actual length
 of the marker depends on other factors such as \code{delta} positioning. Default 0.02}
+
+\item{marker, }{character, style of the annotation marker. Default: "trinket"}
 
 \item{...}{additional graphical parameters, see \code{\link[graphics]{par}},
 see \code{\link{smatplot}}.}
