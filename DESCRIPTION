@@ -27,6 +27,7 @@ Imports:
     signal,
     hastaLaVista2
 VignetteBuilder: knitr
-Remotes: github::phenological/nmr-peaks
+Remotes: github::phenological/nmr-peaks,
+  github::phenological/hastaLaVista2
 Depends: 
     R (>= 4.4)
