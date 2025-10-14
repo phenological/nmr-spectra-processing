@@ -16,8 +16,7 @@
 #' parameter is passed both to \code{\link[graphics]{matplot}} and \code{\link[graphics]{legend}},
 #' so you always get lines in your legend (see ... below)
 #' @param legend, optional, position of the legend as specified in
-#' \code{\link[graphics]{legend}}
-#' @param label, character, optional, series labels for the legend
+#' \code{\link[graphics]{legend}}. No legend is printed by default.
 #' @param reverse logic, optional, if TRUE (default) the x scale of the plot 
 #' increases from right to left as it's customary in NMR spectroscopy
 #' @param resolution, character. If "full" all data are passed to 
@@ -25,8 +24,8 @@
 #'  device's resolution before plotting. By default \code{smatplot} chooses
 #'  according to data size. See Details.
 #' @param reduce, function used to compute bin values. See Details
-#' @param col vector of series colors. The default is \emph{Set1} copied from 
-#' \code{\link[RColorBrewer]{RColorBrewer}}. 
+#' @param col vector to color by. Works just as in R base plotting. The default is \emph{Set1} copied from 
+#' \code{\link[RColorBrewer]{RColorBrewer}}.
 #' @param stacked logical, if TRUE plots spectra stacked along the y axis.
 #' If FALSE (default) overlays spectra on top of each other.
 #' @param ..., additional arguments for customization. These arguments are
@@ -78,201 +77,119 @@
 #' @importFrom graphics matplot
 #' @importFrom grDevices dev.size
 #' @export
-smatplot <- function(ppm, y, roi, by,lty=1,legend,label
-                     ,reverse=TRUE
-                     ,resolution=c(
-                       "full","dev"
-                       ,ifelse(length(as.matrix(y)) > 1.2e6, "dev", "full")
-                     )[3]
-                     ,reduce
-                     ,col=c("#E41A1C","#377EB8","#4DAF4A","#984EA3","#FF7F00"
-                            ,"#FFFF33","#A65628","#F781BF","#999999")
-                     ,stacked = FALSE
-                     ,...){
-  #Local wrappers to ease optional argument forwarding
-  lmatplot <- function(...,fill,border,angle,density,bty,bg
-                       ,box.lwd,box.lty,box.col,pt.bg,pt.cex,pt.lwd
-                       ,xjust,yjust,x.intersp,y.intersp,adj,text.width
-                       ,text.col,text.font,merge,trace
-                       ,plot,ncol,horiz,title,insert,xpd,title.col,title.adj
-                       ,title.cex,title.font,seg.len){
+smatplot <- function (ppm, y, roi, by, lty = 1, legend, reverse = TRUE, 
+  resolution = c("full", "dev", ifelse(length(as.matrix(y)) > 
+    1200000, "dev", "full"))[3], reduce, col = c("#E41A1C", 
+    "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33", 
+    "#A65628", "#F781BF", "#999999"), stacked = FALSE, ...) 
+{
+  lmatplot <- function(..., fill, border, angle, density, 
+    bty, bg, box.lwd, box.lty, box.col, pt.bg, pt.cex, pt.lwd, 
+    xjust, yjust, x.intersp, y.intersp, adj, text.width, 
+    text.col, text.font, merge, trace, plot, ncol, horiz, 
+    title, insert, xpd, title.col, title.adj, title.cex, 
+    title.font, seg.len) {
     matplot(...)
   }
-  llegend <- function(...,adj,ann,cex.axis,cex.lab,cex.main,cex.sub
-                      ,col.axis,col.lab,col.main,col.sub,crt,err,family,fg,font
-                      ,font.axis,font.lab,front.main,font.sub,lab,las,lend,ljoin
-                      ,lmitre,mai,mar,mex,mgp,mkh,page,smo,srt,tck,xaxp,xaxs
-                      ,xaxt,xpd,yaxp,yaxs,yaxt
-                      ,type,main,sub,xlab,ylab,asp
-                      ,xlim,ylim,log,add,verbose,frame
-  ){
+  llegend <- function(..., adj, ann, cex.axis, cex.lab, cex.main, 
+    cex.sub, col.axis, col.lab, col.main, col.sub, crt, 
+    err, family, fg, font, font.axis, font.lab, front.main, 
+    font.sub, lab, las, lend, ljoin, lmitre, mai, mar, mex, 
+    mgp, mkh, page, smo, srt, tck, xaxp, xaxs, xaxt, xpd, 
+    yaxp, yaxs, yaxt, type, main, sub, xlab, ylab, asp, 
+    xlim, ylim, log, add, verbose, frame) {
     legend(...)
   }
+  #Need to cycle colors myself to achieve consistency when using the "by" parameter
+  n <- nrow(y) %/% length(col)
+  k <- nrow(y) %% length(col)
+  col <- c(rep(col,n),col[1:k])
   
-  #Prep args to plot call(s)
-  
-  ##Cast y if not complying to type
-  if(!is.matrix(y) & !is.vector(y)){
-    cat(crayon::yellow("nmr-spectra-processing::smatplot >>"
-                       ,"Argument Y being cast as.matrix.\n"
-                       ,"Unpredictable results may follow if casting to"
-                       ,"numeric matrix fails\n"))
+  if (!is.matrix(y) & !is.vector(y)) {
+    cat(crayon::yellow("nmr-spectra-processing::smatplot >>", 
+      "Argument Y being cast as.matrix.\n", "Unpredictable results may follow if casting to", 
+      "numeric matrix fails\n"))
     y <- as.matrix(y)
   }
-  
-  ##transpose y for matplot compability
-  if (is.matrix(y)) y <- t(y) else y <- as.matrix(y)
-  
-  ##get annd apply roi filter to ppm and y
-  if (!missing(roi)){
+  if (is.matrix(y)) 
+    y <- t(y)
+  else y <- as.matrix(y)
+  if (!missing(roi)) {
     roi <- sort(roi)
     fi <- ppm >= roi[1] & ppm <= roi[2]
     ppm <- ppm[fi]
-    y <- y[fi,,drop=FALSE]
+    y <- y[fi, , drop = FALSE]
   }
-  else{
-    roi <- range(ppm) #default roi
+  else {
+    roi <- range(ppm)
   }
-  
-  ##Adjust resolution
-  ###Note that we adjust for resolution in x; y is plotted as is
   pointz <- dim(y)[1L]
-  if (resolution=="dev"){
-    pixels <- grDevices::dev.size(units="px")[1]
-    if (pointz > pixels){
-      cat(crayon::yellow("nmr.spectra.processing::smatplot >>"
-                         ,"Binning spectra to fit the graphic device's resolution\n"
-                         ,"If you want to keep full resolution set argument resolution='full'\n"
-      )
-      )
-      pointsPerPixel <- pointz %/% pixels
-      if (missing(reduce)){
-        fi <- 1:pointz %% pointsPerPixel == 0
+  if (resolution == "dev") {
+    pixels <- grDevices::dev.size(units = "px")[1]
+    if (pointz > pixels) {
+      cat(crayon::yellow("nmr.spectra.processing::smatplot >>", 
+        "Binning spectra to fit the graphic device's resolution\n", 
+        "If you want to keep full resolution set argument resolution='full'\n"))
+      pointsPerPixel <- pointz%/%pixels
+      if (missing(reduce)) {
+        fi <- 1:pointz%%pointsPerPixel == 0
         ppm <- ppm[fi]
-        y <- y[fi,,drop=FALSE]  
-      } else{
-        cat(crayon::yellow("nmr.spectra.processing::smatplot >>"
-                           ,"Applying your custom reduce function\n"
-        )
-        )
-        bins <- as.factor(1:pointz %/% pointsPerPixel)
-        ppm <- unname(sapply(split(ppm,bins),reduce))
-        y <- apply(y,2,function(v){
-          unname(
-            sapply(
-              split(v,1:pointz %/% pointsPerPixel)
-              ,reduce
-            )
-          )
+        y <- y[fi, , drop = FALSE]
+      }
+      else {
+        cat(crayon::yellow("nmr.spectra.processing::smatplot >>", 
+          "Applying your custom reduce function\n"))
+        bins <- as.factor(1:pointz%/%pointsPerPixel)
+        ppm <- unname(sapply(split(ppm, bins), reduce))
+        y <- apply(y, 2, function(v) {
+          unname(sapply(split(v, 1:pointz%/%pointsPerPixel), 
+            reduce))
         })
       }
     }
   }
-  
-  ##Reverse scale
-  if (reverse){
+  if (reverse) {
     roi <- rev(roi)
   }
-  
-  ##Prep optional arguments and related parameters
   extrargs <- list(...)
-  ###axis labels
-  if(!"xlab" %in% names(extrargs)) extrargs$xlab <- "ppm"
-  if(!"ylab" %in% names(extrargs)) extrargs$ylab <- NA
-  ###"by" groupings
+  if (!"xlab" %in% names(extrargs)) 
+    extrargs$xlab <- "ppm"
+  if (!"ylab" %in% names(extrargs)) 
+    extrargs$ylab <- NA
   n <- ncol(y)
-  if (missing(by)){
+  if (missing(by)) {
     groups <- list(1:n)
-  } else{
-    groups <- split(1:n,ceiling(1:n / by))
-    # print(groups)
   }
-  ###series gap (vwindow) for stacked layout
-  if("ylim" %in% names(extrargs)) vwindow <- diff(extrargs$ylim)
-  ###ylim prep delayed as it may change for each iteration on "by"
-  
-  #Loop on groups, final adjustments, plot
-  for (g in groups){
-    yg <- y[,g,drop=FALSE]
-    #vertical shift and limits adjustment for stacked layout
-    if(stacked){
-      #ylim assumed to be given as limits for each spectrum rather than for the
-      #full stack, as that is more natural
-      #WARNING: note, however, that vwindow only controls gap between series
-      #(aka vertical shift on spectra); the whole intensity range is plotted 
-      #regardless
-      if("ylim" %in% names(extrargs)){
-        # vwindow <- diff(extrargs$ylim)
-        extrargs$ylim <- c(extrargs$ylim[1],extrargs$ylim[1] + vwindow * length(g))
-      } else{
+  else {
+    groups <- split(1:n, ceiling(1:n/by))
+  }
+  if ("ylim" %in% names(extrargs)) 
+    vwindow <- diff(extrargs$ylim)
+  for (g in groups) {
+    yg <- y[, g, drop = FALSE]
+    colg <- col[g]
+    if (stacked) {
+      if ("ylim" %in% names(extrargs)) {
+        extrargs$ylim <- c(extrargs$ylim[1], extrargs$ylim[1] + 
+          vwindow * length(g))
+      }
+      else {
         vwindow <- max(yg)
       }
-      for (i in 1:length(g)) yg[,i] <- yg[,i] + vwindow * (i-1)
+      for (i in 1:length(g)) yg[, i] <- yg[, i] + vwindow * 
+        (i - 1)
     }
-    #plot
-    do.call(lmatplot,c(list(x=ppm,y=yg,type="l",xlim=roi,lty=lty,col=col),extrargs))
-    #legend
-    if(!missing(legend)){
-      if(missing(label)){
-        do.call(llegend,c(list(x=legend,legend=g,col=col,lty=lty),extrargs))
-      } else{
-        do.call(llegend,c(list(x=legend,legend=label[g],col=col,lty=lty),extrargs))
+    do.call(lmatplot, c(list(x = ppm, y = yg, type = "l", 
+      xlim = roi, lty = lty, col = colg), extrargs))
+    if (!missing(legend)) {
+      if(is.factor(col)){
+        do.call(llegend, c(list(x = legend, legend = levels(col), 
+          col = 1:length(levels(col)), lty = lty), extrargs))
+      }
+      else {
+        do.call(llegend, c(list(x = legend, legend = unique(col), 
+          col = unique(col), lty = lty), extrargs))
       }
     }
   }
-  
-  # if (missing(by)){
-  #   n <- ncol(y)
-  #   if(stacked){
-  #     if("ylim" %in% names(extrargs)){
-  #       vwindow <- diff(extrargs$ylim)
-  #       extrargs$ylim <- c(extrargs$ylim[1],extrargs$ylim[1] + vwindow * n)
-  #     } else{
-  #       vwindow <- max(y)
-  #     }
-  #     y <- sapply(1:n, function(i) y[,i] + vwindow * (i-1))
-  #   }
-  #   # lmatplot(x=ppm,y=y,type="l",xlim=roi,lty=lty,col=col,...)
-  #   print(c(list(x=ppm,y=y,type="l",xlim=roi,lty=lty,col=col),extrargs))
-  #   do.call(lmatplot,c(list(x=ppm,y=y,type="l",xlim=roi,lty=lty,col=col),extrargs))
-  #   # if (!missing(legend)){
-  #   #   if (missing(label))
-  #   #     llegend(x=legend,legend=1:dim(y)[2],col=col,extrargs)#...)
-  #   #   else
-  #   #     llegend(x=legend,legend=label[1:dim(y)[2]],lty=lty
-  #   #             ,col=col,extrargs)#...)
-  #   # }
-  # } 
-  # else{
-  #   n <- floor(dim(y)[2] / by)
-  #   r <- dim(y)[2] %% by
-  #   for (j in 1:n){
-  #     soi <- 1:by + by*(j-1)
-  #     if(stacked){
-  #       vwindow <- max(y[,soi])
-  #       y[,soi] <- sapply(1:by, function(i) y[,soi,drop=FALSE][,i] + vwindow * (i-1))
-  #     }
-  #     lmatplot(x=ppm,y=y[,soi,drop=FALSE],type="l",lty=lty,col=col,xlim=roi,...)
-  #     if (!missing(legend)){
-  #       if (missing(label))
-  #         llegend(x=legend,legend=soi,col=col,lty=lty,...)
-  #       else
-  #         llegend(x=legend,legend=label[soi],col=col,lty=lty,...)
-  #     }
-  #   } 
-  #   if (r>0){
-  #     soi <- (by*n+1):(by*n+r)
-  #     if(stacked){
-  #       vwindow <- max(y[,soi])
-  #       y[,soi] <- sapply(1:r, function(i) y[,soi,drop=FALSE][,i] + vwindow * (i-1))
-  #     }
-  #     lmatplot(ppm,y[,soi,drop=FALSE],type="l",lty=lty,col=col,xlim=roi,...)
-  #     if (!missing(legend)){
-  #       if (missing(label))
-  #         llegend(x=legend,legend=soi,col=col,lty=lty,...)
-  #       else
-  #         llegend(x=legend,legend=label[soi],col=col,lty=lty,...)
-  #     }
-  #   } 
-  # }
 }
