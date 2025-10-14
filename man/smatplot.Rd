@@ -11,7 +11,6 @@ smatplot(
   by,
   lty = 1,
   legend,
-  label,
   reverse = TRUE,
   resolution = c("full", "dev", ifelse(length(as.matrix(y)) > 1200000, "dev", "full"))[3],
   reduce,
@@ -37,9 +36,7 @@ parameter is passed both to \code{\link[graphics]{matplot}} and \code{\link[grap
 so you always get lines in your legend (see ... below)}
 
 \item{legend, }{optional, position of the legend as specified in
-\code{\link[graphics]{legend}}}
-
-\item{label, }{character, optional, series labels for the legend}
+\code{\link[graphics]{legend}}. No legend is printed by default.}
 
 \item{reverse}{logic, optional, if TRUE (default) the x scale of the plot
 increases from right to left as it's customary in NMR spectroscopy}
@@ -51,7 +48,7 @@ according to data size. See Details.}
 
 \item{reduce, }{function used to compute bin values. See Details}
 
-\item{col}{vector of series colors. The default is \emph{Set1} copied from
+\item{col}{vector to color by. Works just as in R base plotting. The default is \emph{Set1} copied from
 \code{\link[RColorBrewer]{RColorBrewer}}.}
 
 \item{stacked}{logical, if TRUE plots spectra stacked along the y axis.
