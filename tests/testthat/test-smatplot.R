@@ -1,5 +1,6 @@
 test_that("smatplot works", {
   expect_no_condition(smatplot(ppm,avo3))
+  expect_no_condition(smatplot(ppm,avo3[1,]))
   expect_no_condition(smatplot(ppm,avo3,roi=c(1.4,1.6)))
   expect_no_condition(smatplot(ppm,avo3,roi=c(1.4,1.6),ylim=c(0,5e5)))
   expect_no_condition(smatplot(ppm,avo3,by=2,col=factor(c("a","a","b")),legend="topleft"))

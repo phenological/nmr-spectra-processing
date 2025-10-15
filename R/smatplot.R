@@ -100,10 +100,7 @@ smatplot <- function (ppm, y, roi, by, lty = 1, legend, reverse = TRUE,
     xlim, ylim, log, add, verbose, frame) {
     legend(...)
   }
-  #Need to cycle colors myself to achieve consistency when using the "by" parameter
-  n <- nrow(y) %/% length(col)
-  k <- nrow(y) %% length(col)
-  col <- c(rep(col,n),col[1:k])
+  
   
   if (!is.matrix(y) & !is.vector(y)) {
     cat(crayon::yellow("nmr-spectra-processing::smatplot >>", 
@@ -114,6 +111,12 @@ smatplot <- function (ppm, y, roi, by, lty = 1, legend, reverse = TRUE,
   if (is.matrix(y)) 
     y <- t(y)
   else y <- as.matrix(y)
+  
+  #Need to cycle colors myself to achieve consistency when using the "by" parameter
+  n <- ncol(y) %/% length(col)
+  k <- ncol(y) %% length(col)
+  col <- c(rep(col,n),col[1:k])
+  
   if (!missing(roi)) {
     roi <- sort(roi)
     fi <- ppm >= roi[1] & ppm <= roi[2]
