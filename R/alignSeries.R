@@ -136,11 +136,10 @@ alignSeries <- function(x, ref=c("median","mean","more options in documentation"
                         "Invalid reference\n"))
     stop()
   }
-  return(t(
-    apply(x,1,function(v){
-      alignSeries.numeric(v, ref=ref, threshold=threshold, shift=shift
-                          ,padding=padding,from=from, ...)
-      })
-    )
-  )
+  res <- apply(x,1,function(v){
+    alignSeries.numeric(v, ref=ref, threshold=threshold, shift=shift
+                        ,padding=padding,from=from, ...)
+  })
+  if (is.matrix(res)) return(t(res))
+  return(res)
 }
