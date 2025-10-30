@@ -177,7 +177,7 @@ smatplot <- function (ppm, y, roi, by, lty = 1, legend, reverse = TRUE,
           vwindow * length(g))
       }
       else {
-        vwindow <- max(yg)
+        vwindow <- max(yg,na.rm = TRUE)
       }
       for (i in 1:length(g)) yg[, i] <- yg[, i] + vwindow * 
         (i - 1)
