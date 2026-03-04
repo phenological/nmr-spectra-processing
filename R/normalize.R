@@ -52,20 +52,18 @@ pqn <- function(X, ref=median, of=TRUE){
 
 #' Spectrum normalization
 #' 
-#' Convinence wrapper for spectra normalization
-#' @param X numeric vector or matrix, input NMR
+#' Spectra normalization
+#' @param X numeric vector (single spectrum) or matrix (multiple spectra, samples
+#'  in) with NMR intensities
 #' @param method, function to be used for normalization. Defaults to \code{\link{pqn}}
 #' @param ..., additional parameters to method
-#' @details if \code{X} is a matrix, \code{method} is applied to each row to obtain
-#' the normalization coefficientes. Then, each row of \code{X} is divided by its
-#' corresponding coefficient. If \code{X} is a vector, this functions is equivalent
-#' to simply X / method(X). Since this is but a convenience wrapper, \code{method=max}
-#' (max height normalization) and \code{method=sum} (total area normalization)
-#' are parsed internaly so that they are applied to each row of the matrix
-#'  rather than to the whole matrix in order to obtain the desired result.
-#'  Total area normalization can also be obtained through \code{method=rowSums}
-#' @returns numeric vector with the PQN dilution factors. Note that to apply the
-#' correction each spectrum must be _divided_ by the corresponding dilution factor.
+#' @details This is mostly just a convenience wrapper to compute X / method(X) 
+#' under the expectation that, for a n x m matrix X, method(X) returns a vector 
+#' of n (inverse) normalization factors. As added value, it parses certain values 
+#' of the \code{method} argument. Namely: \code{method=max} is interpreted as 
+#' max height normalization and \code{method=sum} is interpreted as total 
+#' area normalization.
+#' @returns normalized spectra matrix.
 #' @export
 normalize <- function(X,method=pqn,...){
   if (!is.numeric(X)){
