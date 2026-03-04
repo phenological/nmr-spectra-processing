@@ -171,6 +171,7 @@ smatplot <- function (ppm, y, roi, by, lty = 1, legend, reverse = TRUE,
   for (g in groups) {
     yg <- y[, g, drop = FALSE]
     colg <- col[g]
+    if(is.factor(colg)) colg <- droplevels(colg)
     if (stacked) {
       if ("ylim" %in% names(extrargs)) {
         extrargs$ylim <- c(extrargs$ylim[1], extrargs$ylim[1] + 
@@ -186,12 +187,12 @@ smatplot <- function (ppm, y, roi, by, lty = 1, legend, reverse = TRUE,
       xlim = roi, lty = lty, col = colg), extrargs))
     if (!missing(legend)) {
       if(is.factor(col)){
-        do.call(llegend, c(list(x = legend, legend = levels(col), 
-          col = 1:length(levels(col)), lty = lty), extrargs))
+        do.call(llegend, c(list(x = legend, legend = levels(colg), 
+          col = 1:length(colg), lty = lty), extrargs))
       }
       else {
-        do.call(llegend, c(list(x = legend, legend = unique(col), 
-          col = unique(col), lty = lty), extrargs))
+        do.call(llegend, c(list(x = legend, legend = unique(colg), 
+          col = unique(colg), lty = lty), extrargs))
       }
     }
   }
