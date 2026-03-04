@@ -7,26 +7,24 @@
 normalize(X, method = pqn, ...)
 }
 \arguments{
-\item{X}{numeric vector or matrix, input NMR}
+\item{X}{numeric vector (single spectrum) or matrix (multiple spectra, samples
+in) with NMR intensities}
 
 \item{method, }{function to be used for normalization. Defaults to \code{\link{pqn}}}
 
 \item{..., }{additional parameters to method}
 }
 \value{
-numeric vector with the PQN dilution factors. Note that to apply the
-correction each spectrum must be \emph{divided} by the corresponding dilution factor.
+normalized spectra matrix.
 }
 \description{
-Convinence wrapper for spectra normalization
+Spectra normalization
 }
 \details{
-if \code{X} is a matrix, \code{method} is applied to each row to obtain
-the normalization coefficientes. Then, each row of \code{X} is divided by its
-corresponding coefficient. If \code{X} is a vector, this functions is equivalent
-to simply X / method(X). Since this is but a convenience wrapper, \code{method=max}
-(max height normalization) and \code{method=sum} (total area normalization)
-are parsed internaly so that they are applied to each row of the matrix
-rather than to the whole matrix in order to obtain the desired result.
-Total area normalization can also be obtained through \code{method=rowSums}
+This is mostly just a convenience wrapper to compute X / method(X)
+under the expectation that, for a n x m matrix X, method(X) returns a vector
+of n (inverse) normalization factors. As added value, it parses certain values
+of the \code{method} argument. Namely: \code{method=max} is interpreted as
+max height normalization and \code{method=sum} is interpreted as total
+area normalization.
 }
